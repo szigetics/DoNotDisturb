@@ -1,247 +1,81 @@
 //
-//  file: Utilities.m
-//  project: DND (shared)
+//  file: utilities.m
+//  project: DoNotDisturb (shared)
 //  description: various helper/utility functions
 //
 //  created by Patrick Wardle
-//  copyright (c) 2018 Objective-See. All rights reserved.
+//  copyright (c) 2026 Objective-See. All rights reserved.
 //
 
-#import "Consts.h"
-#import "Logging.h"
-#import "Utilities.h"
+#import "consts.h"
+#import "utilities.h"
 
+#import <dlfcn.h>
 #import <signal.h>
 #import <unistd.h>
 #import <libproc.h>
 #import <sys/stat.h>
-#import <arpa/inet.h>
-#import <sys/socket.h>
+#import <bsm/libbsm.h>
 #import <sys/sysctl.h>
+#import <Carbon/Carbon.h>
 #import <Security/Security.h>
+#import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
+#import <CommonCrypto/CommonDigest.h>
+#import <SystemConfiguration/SystemConfiguration.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
+#import <IOKit/IOKitLib.h>
+#import <IOKit/pwr_mgt/IOPM.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <LocalAuthentication/LocalAuthentication.h>
 #import <SystemConfiguration/SystemConfiguration.h>
 
-//init crash reporting
-void initCrashReporting()
-{
-    //sentry
-    NSBundle *sentry = nil;
-    
-    //error
-    NSError* error = nil;
-    
-    //class
-    Class SentryClient = nil;
-    
-    //load senty
-    sentry = loadFramework(@"Sentry.framework");
-    if(nil == sentry)
-    {
-        //err msg
-        logMsg(LOG_ERR, @"failed to load 'Sentry' framework");
-        
-        //bail
-        goto bail;
-    }
-    
-    //get client class
-    SentryClient = NSClassFromString(@"SentryClient");
-    if(nil == SentryClient)
-    {
-        //bail
-        goto bail;
-    }
-    
-    //set shared client
-    [SentryClient setSharedClient:[[SentryClient alloc] initWithDsn:CRASH_REPORTING_URL didFailWithError:&error]];
-    if(nil != error)
-    {
-        //log error
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"initializing 'Sentry' failed with %@", error]);
-        
-        //bail
-        goto bail;
-    }
-    
-    //start crash handler
-    [[SentryClient sharedClient] startCrashHandlerWithError:&error];
-    if(nil != error)
-    {
-        //log error
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"starting 'Sentry' crash handler failed with %@", error]);
-        
-        //bail
-        goto bail;
-    }
-    
-bail:
-    
-    return;
-}
 
+#ifndef DAEMON_BUILD
+#import "AppDelegate.h"
+#endif
 
-//loads a framework
-// note: assumes it is in 'Framework' dir
-NSBundle* loadFramework(NSString* name)
-{
-    //handle
-    NSBundle* framework = nil;
-    
-    //framework path
-    NSString* path = nil;
-    
-    //init path
-    path = [NSString stringWithFormat:@"%@/../Frameworks/%@", [NSProcessInfo.processInfo.arguments[0] stringByDeletingLastPathComponent], name];
-    
-    //standardize path
-    path = [path stringByStandardizingPath];
-    
-    //init framework (bundle)
-    framework = [NSBundle bundleWithPath:path];
-    if(NULL == framework)
-    {
-        //bail
-        goto bail;
-    }
-    
-    //load framework
-    if(YES != [framework loadAndReturnError:nil])
-    {
-        //bail
-        goto bail;
-    }
-    
-bail:
-    
-    return framework;
-}
+@import OSLog;
+
+/* GLOBALS */
+
+//log handle
+extern os_log_t logHandle;
 
 //get app's version
 // extracted from Info.plist
-NSString* getAppVersion()
+NSString* getAppVersion(void)
 {
     //read and return 'CFBundleVersion' from bundle
     return [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
 }
 
-//get path to (main) app
-// login item is in app bundle, so parse up to get main app
-NSString* getMainAppPath()
+//check if we're running on a laptop
+BOOL isLaptop(void)
 {
-    //path components
-    NSArray *pathComponents = nil;
+    BOOL laptop = NO;
     
-    //path to config (main) app
-    NSString* mainApp = nil;
-    
-    //get path components
-    // then build full path to main app
-    pathComponents = [[[NSBundle mainBundle] bundlePath] pathComponents];
-    if(pathComponents.count > 4)
-    {
-        //init path to full (main) app
-        mainApp = [NSString pathWithComponents:[pathComponents subarrayWithRange:NSMakeRange(0, pathComponents.count - 4)]];
+    io_service_t service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPMrootDomain"));
+    if(!service) {
+        return NO;
     }
     
-    //when (still) nil
-    // use default path
-    if(nil == mainApp)
-    {
-        //default
-        mainApp = [@"/Applications" stringByAppendingPathComponent:APP_NAME];
-    }
-    
-    return mainApp;
-}
-
-//get name of logged in user
-NSString* getConsoleUser()
-{
-    //copy/return user
-    return CFBridgingRelease(SCDynamicStoreCopyConsoleUser(NULL, NULL, NULL));
-}
-
-//verify that an app bundle is
-// a) signed
-// b) signed with signing auth
-OSStatus verifyApp(NSString* path, NSString* signingAuth)
-{
-    //status
-    OSStatus status = !noErr;
-    
-    //signing req string
-    NSString *requirementString = nil;
-    
-    //code
-    SecStaticCodeRef staticCode = NULL;
-    
-    //signing reqs
-    SecRequirementRef requirementRef = NULL;
-    
-    //init requirement string
-    requirementString = [NSString stringWithFormat:@"anchor trusted and certificate leaf [subject.CN] = \"%@\"", signingAuth];
-    
-    //create static code
-    status = SecStaticCodeCreateWithPath((__bridge CFURLRef)([NSURL fileURLWithPath:path]), kSecCSDefaultFlags, &staticCode);
-    if(noErr != status)
-    {
-        //err msg
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"SecStaticCodeCreateWithPath failed w/ %d", status]);
+    CFTypeRef clamshell = IORegistryEntryCreateCFProperty(service, CFSTR("AppleClamshellState"), kCFAllocatorDefault, 0);
+    if(clamshell) {
         
-        //bail
-        goto bail;
+        //property exists: we're on a laptop
+        laptop = YES;
+        CFRelease(clamshell);
     }
     
-    //create req string
-    status = SecRequirementCreateWithString((__bridge CFStringRef _Nonnull)(requirementString), kSecCSDefaultFlags, &requirementRef);
-    if( (noErr != status) ||
-        (requirementRef == NULL) )
-    {
-        //err msg
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"SecRequirementCreateWithString failed w/ %d", status]);
-        
-        //bail
-        goto bail;
-    }
+    IOObjectRelease(service);
     
-    //check if file is signed w/ apple dev id by checking if it conforms to req string
-    status = SecStaticCodeCheckValidity(staticCode, kSecCSDefaultFlags, requirementRef);
-    if(noErr != status)
-    {
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"SecStaticCodeCheckValidity failed w/ %d", status]);
-        
-        //bail
-        goto bail;
-    }
-    
-    //happy
-    status = noErr;
-    
-bail:
-    
-    //free req reference
-    if(NULL != requirementRef)
-    {
-        //free
-        CFRelease(requirementRef);
-        requirementRef = NULL;
-    }
-    
-    //free static code
-    if(NULL != staticCode)
-    {
-        //free
-        CFRelease(staticCode);
-        staticCode = NULL;
-    }
-    
-    return status;
+    return laptop;
 }
 
 //get state of lid
-int getLidState()
+int getLidState(void)
 {
     //state
     int state = stateUnavailable;
@@ -257,7 +91,7 @@ int getLidState()
     if(MACH_PORT_NULL == powerManagmentRE)
     {
         //err msg
-        logMsg(LOG_ERR, @"failed to look up the registry entry for 'IOPMrootDomain'");
+        os_log_error(logHandle, "failed to look up the registry entry for 'IOPMrootDomain'");
         
         //error
         goto bail;
@@ -268,7 +102,7 @@ int getLidState()
     if(NULL == clamshellState)
     {
         //err msg
-        logMsg(LOG_ERR, @"failed to get property for 'kAppleClamshellStateKey'");
+        os_log_error(logHandle, "failed to get property for 'kAppleClamshellStateKey'");
         
         //error
         goto bail;
@@ -302,20 +136,374 @@ bail:
     return state;
 }
 
+//given an app binary
+// try get app's bundle
+NSBundle* getAppBundle(NSString* binaryPath)
+{
+    //bundle
+    NSBundle* appBundle = nil;
+    
+    //app path
+    NSString* appPath = nil;
+    
+    //build app path
+    // assuming path is <blah.app>/Contents/MacOS/<blah>
+    appPath = [[[binaryPath stringByDeletingLastPathComponent] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+    if(YES != [appPath hasSuffix:@".app"])
+    {
+        //bail
+        goto bail;
+    }
+    
+    //try to load app's bundle
+    appBundle = [NSBundle bundleWithPath:appPath];
+    if(nil == appBundle)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //sanity check
+    // binary paths match?
+    if(YES != [appBundle.executablePath isEqualToString:binaryPath])
+    {
+        //unset
+        appBundle = nil;
+        goto bail;
+    }
+    
+bail:
+    
+    return appBundle;
+}
+
+//get binary name (maybe via bundle name)
+NSString* getBinaryName(NSString* path)
+{
+    return [getAppBundle(path) infoDictionary][@"CFBundleName"] ?: [path lastPathComponent];
+}
+
+//get path to (main) app of a login item
+// login item is in app bundle, so parse up to get main app
+NSString* getMainAppPath(void)
+{
+    //path components
+    NSArray *pathComponents = nil;
+    
+    //path to config (main) app
+    NSString* mainApp = nil;
+    
+    //get path components
+    // then build full path to main app
+    pathComponents = [[[NSBundle mainBundle] bundlePath] pathComponents];
+    if(pathComponents.count > 4)
+    {
+        //init path to full (main) app
+        mainApp = [NSString pathWithComponents:[pathComponents subarrayWithRange:NSMakeRange(0, pathComponents.count - 4)]];
+    }
+    
+    //when (still) nil
+    // use default path
+    if(nil == mainApp)
+    {
+        //default
+        mainApp = [@"/Applications" stringByAppendingPathComponent:APP_NAME];
+    }
+    
+    return mainApp;
+}
+
+//give path to app
+// get full path to its binary
+NSString* getBundleExecutable(NSString* appPath)
+{
+    //binary path
+    NSString* binaryPath = nil;
+    
+    //app bundle
+    NSBundle* appBundle = nil;
+    
+    //load app bundle
+    appBundle = [NSBundle bundleWithPath:appPath];
+    if(nil == appBundle)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to load app bundle for %{public}@", appPath);
+        
+        //bail
+        goto bail;
+    }
+    
+    //extract executable
+    binaryPath = [appBundle.executablePath stringByResolvingSymlinksInPath];
+    
+bail:
+    
+    return binaryPath;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+//get (true) parent
+NSDictionary* getRealParent(pid_t pid)
+{
+    //process info
+    NSDictionary* processInfo = nil;
+    
+    //process serial number
+    ProcessSerialNumber psn = {0, kNoProcess};
+    
+    //(parent) process serial number
+    ProcessSerialNumber ppsn = {0, kNoProcess};
+    
+    //get process serial number from pid
+    if(noErr != GetProcessForPID(pid, &psn))
+    {
+        //err
+        goto bail;
+    }
+    
+    //get process (carbon) info
+    processInfo = CFBridgingRelease(ProcessInformationCopyDictionary(&psn, (UInt32)kProcessDictionaryIncludeAllInformationMask));
+    if(nil == processInfo)
+    {
+        //err
+        goto bail;
+    }
+    
+    //extract/convert parent ppsn
+    ppsn.lowLongOfPSN =  [processInfo[@"ParentPSN"] longLongValue] & 0x00000000FFFFFFFFLL;
+    ppsn.highLongOfPSN = ([processInfo[@"ParentPSN"] longLongValue] >> 32) & 0x00000000FFFFFFFFLL;
+    
+    //get parent process (carbon) info
+    processInfo = CFBridgingRelease(ProcessInformationCopyDictionary(&ppsn, (UInt32)kProcessDictionaryIncludeAllInformationMask));
+    if(nil == processInfo)
+    {
+        //err
+        goto bail;
+    }
+    
+bail:
+    
+    return processInfo;
+}
+
+#pragma GCC diagnostic pop
+
+
+
+//check if something is nil
+// if so, return a default ('unknown') value
+NSString* valueForStringItem(NSString* item)
+{
+    return (nil != item) ? item : @"unknown";
+}
+
+//find 'top-level' app of binary
+// useful to determine if binary (or other app) is embedded in a 'parent' app bundle
+NSString* topLevelApp(NSString* binaryPath)
+{
+    //app path
+    NSString* appPath = nil;
+    
+    //offset of (first) '.app'
+    NSRange offset;
+    
+    //find first instance of '.app' in path
+    offset = [binaryPath rangeOfString:@".app/" options:NSCaseInsensitiveSearch];
+    if(NSNotFound == offset.location)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //extact app path
+    // from start, to & including '.app'
+    appPath = [binaryPath substringWithRange:NSMakeRange(0, offset.location+4)];
+
+bail:
+    
+    return appPath;
+}
+
+//verify that an app bundle is valid
+// signed & with (our) signing auth / identifier
+OSStatus verifyApp(NSString* path, NSString* signingAuth)
+{
+    //status
+    OSStatus status = !noErr;
+    
+    //signing req string
+    NSString *requirement = nil;
+    
+    //code
+    SecStaticCodeRef staticCode = NULL;
+    
+    //signing reqs
+    SecRequirementRef requirementRef = NULL;
+    
+    //init signing req string
+    requirement = [NSString stringWithFormat:@"anchor apple generic and identifier \"%@\" and certificate leaf [subject.CN] = \"%@\" and info [CFBundleShortVersionString] >= \"2.0.0\"", INSTALLER_ID, signingAuth];
+    
+    //create static code
+    status = SecStaticCodeCreateWithPath((__bridge CFURLRef)([NSURL fileURLWithPath:path]), kSecCSDefaultFlags, &staticCode);
+    if(noErr != status)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: 'SecStaticCodeCreateWithPath' failed with %d/%#x", status, status);
+        goto bail;
+    }
+    
+    //create req string
+    status = SecRequirementCreateWithString((__bridge CFStringRef _Nonnull)(requirement), kSecCSDefaultFlags, &requirementRef);
+    if( (noErr != status) ||
+       (requirementRef == NULL) )
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: 'SecRequirementCreateWithString' failed with %d/%#x", status, status);
+        goto bail;
+    }
+    
+    //check if file is signed w/ apple dev id by checking if it conforms to req string
+    status = SecStaticCodeCheckValidity(staticCode, kSecCSDefaultFlags, requirementRef);
+    if(noErr != status)
+    {
+        os_log_error(logHandle, "ERROR: 'SecStaticCodeCheckValidity failed with %d/%#x", status, status);
+        goto bail;
+    }
+    
+    //happy
+    status = noErr;
+    
+bail:
+    
+    //free req reference
+    if(NULL != requirementRef)
+    {
+        //free
+        CFRelease(requirementRef);
+        requirementRef = NULL;
+    }
+    
+    //free static code
+    if(NULL != staticCode)
+    {
+        //free
+        CFRelease(staticCode);
+        staticCode = NULL;
+    }
+    
+    return status;
+}
+
+//get name of logged in user
+NSString* getConsoleUser(void)
+{
+    //copy/return user
+    return CFBridgingRelease(SCDynamicStoreCopyConsoleUser(NULL, NULL, NULL));
+}
+
+//get process name
+// either via app bundle, or path
+NSString* getProcessName(NSString* path)
+{
+    //process name
+    NSString* processName = nil;
+    
+    //app bundle
+    NSBundle* appBundle = nil;
+    
+    //try find an app bundle
+    appBundle = findAppBundle(path);
+    if(nil != appBundle)
+    {
+        //grab name from app's bundle
+        processName = [appBundle infoDictionary][@"CFBundleName"];
+    }
+    
+    //still nil?
+    // ->just grab from path
+    if(nil == processName)
+    {
+        //from path
+        processName = [path lastPathComponent];
+    }
+    
+    return processName;
+}
+
+//given a path to binary
+// parse it back up to find app's bundle
+NSBundle* findAppBundle(NSString* path)
+{
+    //app's bundle
+    NSBundle* appBundle = nil;
+    
+    //standarized path
+    NSString* standardedPath = nil;
+    
+    //app's path
+    NSString* appPath = nil;
+    
+    //standardize path
+    standardedPath = [[path stringByStandardizingPath] stringByResolvingSymlinksInPath];
+    
+    //first just try full path
+    appPath = standardedPath;
+    
+    //try to find the app's bundle
+    do
+    {
+        //try to load app's bundle
+        appBundle = [NSBundle bundleWithPath:appPath];
+        
+        //was an app passed in?
+        if(YES == [appBundle.bundlePath isEqualToString:standardedPath])
+        {
+            //all done
+            break;
+        }
+        
+        //check for match
+        // binary path's match
+        if( (nil != appBundle) &&
+            (YES == [appBundle.executablePath isEqualToString:standardedPath]))
+        {
+            //all done
+            break;
+        }
+        
+        //unset
+        appBundle = nil;
+        
+        //remove last part
+        // will try this next
+        appPath = [appPath stringByDeletingLastPathComponent];
+        
+    //scan until we get to root
+    // of course, loop will exit if app info dictionary is found/loaded
+    } while( (nil != appPath) &&
+             (YES != [appPath isEqualToString:@"/"]) &&
+             (YES != [appPath isEqualToString:@""]) );
+    
+    return appBundle;
+}
+
 //set dir's|file's group/owner
 BOOL setFileOwner(NSString* path, NSNumber* groupID, NSNumber* ownerID, BOOL recursive)
 {
     //ret var
-    BOOL bRet = NO;
+    BOOL bSetOwner = NO;
     
     //owner dictionary
     NSDictionary* fileOwner = nil;
     
     //sub paths
-    NSArray *subPaths = nil;
+    NSArray* subPaths = nil;
     
     //full path
-    // for recursive
+    // ->for recursive
     NSString* fullPath = nil;
     
     //init permissions dictionary
@@ -325,20 +513,18 @@ BOOL setFileOwner(NSString* path, NSNumber* groupID, NSNumber* ownerID, BOOL rec
     if(YES != [[NSFileManager defaultManager] setAttributes:fileOwner ofItemAtPath:path error:NULL])
     {
         //err msg
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"failed to set ownership for %@ (%@)", path, fileOwner]);
-        
-        //bail
+        os_log_error(logHandle, "ERROR: failed to set ownership for %{public}@ (%{public}@)", path, fileOwner);
         goto bail;
     }
     
     //dbg msg
-    logMsg(LOG_DEBUG, [NSString stringWithFormat:@"set ownership for %@ (%@)", path, fileOwner]);
+    os_log_debug(logHandle, "set ownership for %{public}@ (%{public}@)", path, fileOwner);
     
     //do it recursively
     if(YES == recursive)
     {
         //sanity check
-        // make sure root starts with '/'
+        // ->make sure root starts with '/'
         if(YES != [path hasSuffix:@"/"])
         {
             //add '/'
@@ -356,24 +542,82 @@ BOOL setFileOwner(NSString* path, NSNumber* groupID, NSNumber* ownerID, BOOL rec
             if(YES != [[NSFileManager defaultManager] setAttributes:fileOwner ofItemAtPath:fullPath error:NULL])
             {
                 //err msg
-                logMsg(LOG_ERR, [NSString stringWithFormat:@"failed to set ownership for %@ (%@)", fullPath, fileOwner]);
-                
-                //bail
+                os_log_error(logHandle, "ERROR: failed to set ownership for %{public}@ (%{public}@)", fullPath, fileOwner);
                 goto bail;
             }
         }
     }
     
     //no errors
-    bRet = YES;
+    bSetOwner = YES;
+    
+//bail
+bail:
+    
+    return bSetOwner;
+}
+
+//set permissions for file
+BOOL setFilePermissions(NSString* file, int permissions, BOOL recursive)
+{
+    //ret var
+    BOOL bSetPermissions = NO;
+    
+    //file permissions
+    NSDictionary* filePermissions = nil;
+    
+    //root directory
+    NSURL* root = nil;
+    
+    //directory enumerator
+    NSDirectoryEnumerator* enumerator = nil;
+    
+    //error
+    NSError* error = nil;
+    
+    //init dictionary
+    filePermissions = @{NSFilePosixPermissions: [NSNumber numberWithInt:permissions]};
+    
+    //apply file permissions recursively
+    if(YES == recursive)
+    {
+        //init root
+        root = [NSURL fileURLWithPath:file];
+        
+        //init enumerator
+        enumerator = [[NSFileManager defaultManager] enumeratorAtURL:root includingPropertiesForKeys:[NSArray arrayWithObject:NSURLIsDirectoryKey] options:0 errorHandler:nil];
+    
+        //set file permissions on each
+        for(NSURL* currentFile in enumerator)
+        {
+            //set permissions
+            if(YES != [[NSFileManager defaultManager] setAttributes:filePermissions ofItemAtPath:currentFile.path error:&error])
+            {
+                //err msg
+                os_log_error(logHandle, "ERROR: failed to set permissions for %{public}@ (%{public}@), %{public}@", currentFile.path, filePermissions, error);
+                goto bail;
+            }
+        }
+    }
+    
+    //always set permissions on passed in file (or top-level directory)
+    // note: recursive enumerator skips root directory, so execute this always
+    if(YES != [[NSFileManager defaultManager] setAttributes:filePermissions ofItemAtPath:file error:NULL])
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to set permissions for %{public}@ (%{public}@)", file, filePermissions);
+        goto bail;
+    }
+    
+    //happy
+    bSetPermissions = YES;
     
 bail:
     
-    return bRet;
+    return bSetPermissions;
 }
 
-//given a pid
-// get process's path
+//get process's path
 NSString* getProcessPath(pid_t pid)
 {
     //task path
@@ -389,7 +633,7 @@ NSString* getProcessPath(pid_t pid)
     int mib[3] = {0};
     
     //system's size for max args
-    int systemMaxArgs = 0;
+    unsigned long systemMaxArgs = 0;
     
     //process's args
     char* taskArgs = NULL;
@@ -401,7 +645,7 @@ NSString* getProcessPath(pid_t pid)
     size_t size = 0;
     
     //reset buffer
-    bzero(pathBuffer, PROC_PIDPATHINFO_MAXSIZE);
+    memset(pathBuffer, 0x0, PROC_PIDPATHINFO_MAXSIZE);
     
     //first attempt to get path via 'proc_pidpath()'
     status = proc_pidpath(pid, pathBuffer, sizeof(pathBuffer));
@@ -415,7 +659,7 @@ NSString* getProcessPath(pid_t pid)
     else
     {
         //init mib
-        // want system's size for max args
+        // ->want system's size for max args
         mib[0] = CTL_KERN;
         mib[1] = KERN_ARGMAX;
         
@@ -430,7 +674,7 @@ NSString* getProcessPath(pid_t pid)
         }
         
         //alloc space for args
-        taskArgs = (char*)malloc((size_t)systemMaxArgs);
+        taskArgs = malloc(systemMaxArgs);
         if(NULL == taskArgs)
         {
             //bail
@@ -438,7 +682,7 @@ NSString* getProcessPath(pid_t pid)
         }
         
         //init mib
-        // want process args
+        // ->want process args
         mib[0] = CTL_KERN;
         mib[1] = KERN_PROCARGS2;
         mib[2] = pid;
@@ -462,7 +706,6 @@ NSString* getProcessPath(pid_t pid)
         }
         
         //extract number of args
-        // at start of buffer
         memcpy(&numberOfArgs, taskArgs, sizeof(numberOfArgs));
         
         //extract task's name
@@ -485,142 +728,6 @@ bail:
     return processPath;
 }
 
-//exec a process with args
-// if 'shouldWait' is set, wait and return stdout/in and termination status
-NSMutableDictionary* execTask(NSString* binaryPath, NSArray* arguments, BOOL shouldWait)
-{
-    //task
-    NSTask* task = nil;
-    
-    //output pipe for stdout
-    NSPipe* stdOutPipe = nil;
-    
-    //output pipe for stderr
-    NSPipe* stdErrPipe = nil;
-    
-    //read handle for stdout
-    NSFileHandle* stdOutReadHandle = nil;
-    
-    //read handle for stderr
-    NSFileHandle* stdErrReadHandle = nil;
-    
-    //results dictionary
-    NSMutableDictionary* results = nil;
-    
-    //output for stdout
-    NSMutableData *stdOutData = nil;
-    
-    //output for stderr
-    NSMutableData *stdErrData = nil;
-    
-    //init dictionary for results
-    results = [NSMutableDictionary dictionary];
-    
-    //init task
-    task = [NSTask new];
-    
-    //only setup pipes if wait flag is set
-    if(YES == shouldWait)
-    {
-        //init stdout pipe
-        stdOutPipe = [NSPipe pipe];
-        
-        //init stderr pipe
-        stdErrPipe = [NSPipe pipe];
-        
-        //init stdout read handle
-        stdOutReadHandle = [stdOutPipe fileHandleForReading];
-        
-        //init stderr read handle
-        stdErrReadHandle = [stdErrPipe fileHandleForReading];
-        
-        //init stdout output buffer
-        stdOutData = [NSMutableData data];
-        
-        //init stderr output buffer
-        stdErrData = [NSMutableData data];
-        
-        //set task's stdout
-        task.standardOutput = stdOutPipe;
-        
-        //set task's stderr
-        task.standardError = stdErrPipe;
-    }
-    
-    //set task's path
-    task.launchPath = binaryPath;
-    
-    //set task's args
-    if(nil != arguments)
-    {
-        //set
-        task.arguments = arguments;
-    }
-    
-    //dbg msg
-    logMsg(LOG_DEBUG, [NSString stringWithFormat:@"execing task, %@ (arguments: %@)", task.launchPath, task.arguments]);
-    
-    //wrap task launch
-    @try
-    {
-        //launch
-        [task launch];
-    }
-    @catch(NSException *exception)
-    {
-        //err msg
-        logMsg(LOG_ERR, [NSString stringWithFormat:@"failed to launch task (%@)", exception]);
-        
-        //bail
-        goto bail;
-    }
-    
-    //no need to wait
-    // can just bail w/ no output
-    if(YES != shouldWait)
-    {
-        //bail
-        goto bail;
-    }
-    
-    //read in stdout/stderr
-    while(YES == [task isRunning])
-    {
-        //accumulate stdout
-        [stdOutData appendData:[stdOutReadHandle readDataToEndOfFile]];
-        
-        //accumulate stderr
-        [stdErrData appendData:[stdErrReadHandle readDataToEndOfFile]];
-    }
-    
-    //grab any leftover stdout
-    [stdOutData appendData:[stdOutReadHandle readDataToEndOfFile]];
-    
-    //grab any leftover stderr
-    [stdErrData appendData:[stdErrReadHandle readDataToEndOfFile]];
-    
-    //add stdout
-    if(0 != stdOutData.length)
-    {
-        //add
-        results[STDOUT] = stdOutData;
-    }
-    
-    //add stderr
-    if(0 != stdErrData.length)
-    {
-        //add
-        results[STDERR] = stdErrData;
-    }
-    
-    //add exit code
-    results[EXIT_CODE] = [NSNumber numberWithInteger:task.terminationStatus];
-    
-bail:
-    
-    return results;
-}
-
 //given a process path and user
 // return array of all matching pids
 NSMutableArray* getProcessIDs(NSString* processPath, int userID)
@@ -641,37 +748,39 @@ NSMutableArray* getProcessIDs(NSString* processPath, int userID)
     struct kinfo_proc procInfo;
     
     //size of struct
-    size_t procInfoSize = 0;
+    size_t procInfoSize = sizeof(procInfo);
     
     //mib
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, -1};
     
-    //init size
-    procInfoSize = sizeof(struct kinfo_proc);
-    
-    //zero out
-    memset(&procInfo, 0, procInfoSize);
+    //clear buffer
+    memset(&procInfo, 0x0, procInfoSize);
     
     //get # of procs
-    numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
-    
-    //alloc buffer for pids
-    pids = calloc((size_t)numberOfProcesses, sizeof(pid_t));
-    
-    //alloc
-    processIDs = [NSMutableArray array];
-    
-    //get list of pids
-    status = proc_listpids(PROC_ALL_PIDS, 0, pids, numberOfProcesses * (int)sizeof(pid_t));
-    if(status < 0)
+    numberOfProcesses = proc_listallpids(NULL, 0);
+    if(-1 == numberOfProcesses)
     {
         //bail
         goto bail;
     }
     
+    //alloc buffer for pids
+    pids = calloc((unsigned long)numberOfProcesses, sizeof(pid_t));
+    
+    //alloc
+    processIDs = [NSMutableArray array];
+    
+    //get list of pids
+    status = proc_listallpids(pids, numberOfProcesses * (int)sizeof(pid_t));
+    if(status < 0)
+    {
+        //bail
+        goto bail;
+    }
+        
     //iterate over all pids
-    // get name for each process
-    for(int i = 0; i < numberOfProcesses; i++)
+    // ->get name for each process
+    for(int i = 0; i < (int)numberOfProcesses; i++)
     {
         //skip blank pids
         if(0 == pids[i])
@@ -730,62 +839,151 @@ bail:
     return processIDs;
 }
 
-//wait until a window is non nil
-// then make it modal
-void makeModal(NSWindowController* windowController)
+//enable/disable a menu
+void toggleMenu(NSMenu* menu, BOOL shouldEnable)
 {
-    //wait up to 1 second window to be non-nil
-    // then make modal
-    for(int i=0; i<20; i++)
+    //disable autoenable
+    menu.autoenablesItems = NO;
+    
+    //iterate over
+    // set state of each item
+    for(NSMenuItem* item in menu.itemArray)
     {
-        //can make it modal once we have a window
-        if(nil != windowController.window)
-        {
-            //make modal on main thread
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                
-                //modal
-                [[NSApplication sharedApplication] runModalForWindow:windowController.window];
-                
-            });
-            
-            //all done
-            break;
-        }
-        
-        //nap
-        [NSThread sleepForTimeInterval:0.05f];
-        
-    }//until 1 second
+        //set state
+        item.enabled = shouldEnable;
+    }
     
     return;
 }
 
-//check if an instance of an app is already running
-BOOL isAppRunning(NSString* bundleID)
+//get icon for a process
+NSImage* getIconForProcess(NSString* path)
 {
-    //flag
-    BOOL alreadyRunning = NO;
-    
-    //aleady an instance?
-    // make that instance active and then bail
-    for(NSRunningApplication* runningApp in [NSRunningApplication runningApplicationsWithBundleIdentifier:bundleID])
-    {
-        //another instance that's not this?
-        if(YES != [runningApp isEqual:[NSRunningApplication currentApplication]])
-        {
-            //set flag
-            alreadyRunning = YES;
-            
-            //make (already) running instance first
-            [runningApp activateWithOptions:NSApplicationActivateAllWindows|NSApplicationActivateIgnoringOtherApps];
-            
-            //done looking
-            break;
+    NSImage* icon = nil;
+
+    //prefer the app's icon
+    NSBundle *appBundle = findAppBundle(path);
+    if(appBundle) {
+        icon = [NSWorkspace.sharedWorkspace iconForFile:appBundle.bundlePath];
+    }
+
+    //otherwise, generic executable icon
+    if(!icon) {
+        if(@available(macOS 11.0, *)) {
+            icon = [NSWorkspace.sharedWorkspace iconForContentType:UTTypeUnixExecutable];
+        } else {
+            icon = [NSWorkspace.sharedWorkspace iconForFileType:@"public.unix-executable"];
         }
     }
+
+    [icon setSize:NSMakeSize(128, 128)];
+    return icon;
+}
+
+
+//find a process by name
+pid_t findProcess(NSString* processName)
+{
+    //pid
+    pid_t processID = 0;
     
-    return alreadyRunning;
+    //status
+    int status = -1;
+    
+    //# of procs
+    int numberOfProcesses = 0;
+    
+    //array of pids
+    pid_t* pids = NULL;
+    
+    //process path
+    NSString* processPath = nil;
+    
+    //get # of procs
+    numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
+    if(-1 == numberOfProcesses)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //alloc buffer for pids
+    pids = calloc((unsigned long)numberOfProcesses, sizeof(pid_t));
+    
+    //get list of pids
+    status = proc_listpids(PROC_ALL_PIDS, 0, pids, numberOfProcesses * (int)sizeof(pid_t));
+    if(status < 0)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //iterate over all pids
+    // get name for each via helper function
+    for(int i = 0; i < numberOfProcesses; ++i)
+    {
+        //skip blank pids
+        if(0 == pids[i])
+        {
+            //skip
+            continue;
+        }
+        
+        //get name
+        processPath = getProcessPath(pids[i]);
+        if( (nil == processPath) ||
+           (0 == processPath.length) )
+        {
+            //skip
+            continue;
+        }
+        
+        //match?
+        if(YES == [processPath isEqualToString:processName])
+        {
+            //save
+            processID = pids[i];
+            
+            //pau
+            break;
+        }
+        
+    }//all procs
+    
+bail:
+    
+    //free buffer
+    if(NULL != pids)
+    {
+        //free
+        free(pids);
+    }
+    
+    return processID;
+}
+
+//delete item from keychain
+BOOL deleteFromKeychain(NSString* key) {
+    
+    //status
+    OSStatus status = errSecSuccess;
+    
+    //query
+    NSDictionary* query = @{
+        (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrService: key
+    };
+    
+    //delete
+    status = SecItemDelete((__bridge CFDictionaryRef)query);
+    if( (errSecSuccess != status) &&
+        (errSecItemNotFound != status) )
+    {
+        os_log_error(logHandle, "ERROR: failed to delete %{public}@ from keychain (status: %d)", key, (int)status);
+        return NO;
+    }
+    
+    return YES;
 }
 
 //for login item enable/disable
@@ -811,12 +1009,16 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag)
     
     //get reference to login items
     loginItemsRef = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    if(!loginItemsRef) {
+        os_log_error(logHandle, "ERROR: failed to get login items reference");
+        goto bail;
+    }
     
     //add (install)
     if(ACTION_INSTALL_FLAG == toggleFlag)
     {
         //dbg msg
-        logMsg(LOG_DEBUG, [NSString stringWithFormat:@"adding login item %@", loginItem]);
+        os_log_debug(logHandle, "adding login item %{public}@", loginItem);
         
         //add
         LSSharedFileListItemRef itemRef = LSSharedFileListInsertItemURL(loginItemsRef, kLSSharedFileListItemLast, NULL, NULL, (__bridge CFURLRef)(loginItem), NULL, NULL);
@@ -825,7 +1027,7 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag)
         if(NULL != itemRef)
         {
             //dbg msg
-            logMsg(LOG_DEBUG, [NSString stringWithFormat:@"added %@/%@", loginItem, itemRef]);
+            os_log_debug(logHandle, "added %{public}@/%{public}@", loginItem, itemRef);
             
             //release
             CFRelease(itemRef);
@@ -837,9 +1039,7 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag)
         else
         {
             //err msg
-            logMsg(LOG_ERR, @"failed to add login item");
-            
-            //bail
+            os_log_error(logHandle, "ERROR: failed to add login item");
             goto bail;
         }
         
@@ -850,13 +1050,10 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag)
     else
     {
         //dbg msg
-        logMsg(LOG_DEBUG, [NSString stringWithFormat:@"removing login item %@", loginItem]);
+        os_log_debug(logHandle, "removing login item %{public}@", loginItem);
         
         //grab existing login items
         loginItems = LSSharedFileListCopySnapshot(loginItemsRef, nil);
-        
-        //dbg msg
-        logMsg(LOG_DEBUG, [NSString stringWithFormat:@"found %lu login items", (unsigned long)((__bridge NSArray *)loginItems).count]);
         
         //iterate over all login items
         // look for self, then remove it
@@ -877,14 +1074,14 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag)
                 if(noErr != LSSharedFileListItemRemove(loginItemsRef, (__bridge LSSharedFileListItemRef)item))
                 {
                     //err msg
-                    logMsg(LOG_ERR, @"failed to remove login item");
+                    os_log_error(logHandle, "ERROR: failed to remove login item");
                     
                     //bail
                     goto bail;
                 }
                 
                 //dbg msg
-                logMsg(LOG_DEBUG, [NSString stringWithFormat:@"removed login item: %@", loginItem]);
+                os_log_debug(logHandle, "removed login item: %{public}@", loginItem);
                 
                 //happy
                 wasToggled = YES;
@@ -902,7 +1099,7 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag)
         }//all login items
         
     }//remove/uninstall
-
+    
 bail:
     
     //release login items
@@ -940,148 +1137,900 @@ bail:
 
 #pragma clang diagnostic pop
 
-//touchID capable?
-BOOL hasTouchID()
+//check if process is alive
+BOOL isProcessAlive(pid_t processID)
 {
-    //flag
-    BOOL hasTouchID = NO;
+    //ret var
+    BOOL bIsAlive = NO;
     
-    //local auth context
-    LAContext* localauthContext = nil;
+    //signal status
+    int signalStatus = -1;
+    
+    //send kill with 0 to determine if alive
+    signalStatus = kill(processID, 0);
+    
+    //is alive?
+    if( (0 == signalStatus) ||
+        ((0 != signalStatus) && (errno != ESRCH)) )
+    {
+        //alive!
+        bIsAlive = YES;
+    }
+    
+    return bIsAlive;
+}
+
+
+//sha256
+// as string
+NSMutableString* hashFile(NSString* path) {
+    
+    NSData* contents = [NSData dataWithContentsOfFile:path];
+    if (!contents)
+    {
+        os_log_error(logHandle, "ERROR: failed to read in %{public}@ for hashing", path);
+        return nil;
+    }
+    
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(contents.bytes, (CC_LONG)contents.length, digest);
+    
+    NSMutableString* hash = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
+        [hash appendFormat:@"%02x", digest[i]];
+    }
+    
+    return hash;
+}
+
+#ifndef DAEMON_BUILD
+
+//show an alert
+NSModalResponse showAlert(NSAlertStyle style, NSString* messageText, NSString* informativeText, NSArray* buttons)
+{
+    //alert
+    NSAlert* alert = nil;
+    
+    //response
+    NSModalResponse response = 0;
+    
+    //init alert
+    alert = [[NSAlert alloc] init];
+    
+    //set style
+    alert.alertStyle = style;
+    
+    //main text
+    alert.messageText = messageText;
+    
+    //add details
+    if(nil != informativeText)
+    {
+        alert.informativeText = informativeText;
+    }
+    
+    //add buttons
+    for(NSString* title in buttons)
+    {
+        [alert addButtonWithTitle:title];
+    }
+    
+    //make first button, first responder
+    alert.buttons[0].keyEquivalent = @"\r";
+    
+    //center
+    [alert.window center];
+    
+    //foreground
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    
+    //activate
+    [NSApp activate];
+    
+    //show
+    response = [alert runModal];
+    
+#ifdef APP_BUILD
+
+    //(re)set activation policy
+    [((AppDelegate*)NSApplication.sharedApplication.delegate) setActivationPolicy];
+
+#endif
+    
+    return response;
+}
+
+#endif
+
+
+//given a pid, get its parent (ppid)
+pid_t getParentID(int pid)
+{
+    //parent id
+    pid_t parentID = -1;
+    
+    //kinfo_proc struct
+    struct kinfo_proc processStruct;
+    
+    //size
+    size_t procBufferSize = sizeof(processStruct);
+    
+    //mib
+    const u_int mibLength = 4;
+    
+    //syscall result
+    int sysctlResult = -1;
+    
+    //init mib
+    int mib[mibLength] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
+    
+    //clear buffer
+    memset(&processStruct, 0x0, procBufferSize);
+    
+    //make syscall
+    sysctlResult = sysctl(mib, mibLength, &processStruct, &procBufferSize, NULL, 0);
+    
+    //check if got ppid
+    if( (noErr == sysctlResult) &&
+        (0 != procBufferSize) )
+    {
+        //save ppid
+        parentID = processStruct.kp_eproc.e_ppid;
+    }
+    
+    return parentID;
+}
+
+
+//start app
+// note: executed with 'NSWorkspaceLaunchWithoutActivation'
+BOOL startApplication(NSURL* path, NSUInteger launchOptions)
+{
+    //status var
+    BOOL result = NO;
     
     //error
     NSError* error = nil;
     
-    //alloc/init
-    localauthContext = [[LAContext alloc] init];
+    //dbg msg
+    os_log_debug(logHandle, "starting application: %{public}@", path);
     
-    //eval w/ try/catch as it can throw!
-    // note though we ignore "Code=-4 Touch Bar is not available in closed clamshell mode"
+    //launch it
+    if(nil == [[NSWorkspace sharedWorkspace] launchApplicationAtURL:path options:launchOptions configuration:@{} error:&error])
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to launch application: %{public}@/%{public}@", path, error);
+        goto bail;
+    }
+    
+    //happy
+    result = YES;
+    
+bail:
+    
+    return result;
+}
+
+//wait for file to be written to disk
+void waitForFile(NSString* path, float maxWait)
+{
+    //wait interval
+    float waitInterval = 0.1f;
+    
+    //count var for loop
+    NSUInteger count = 0;
+    
+    //wait for file
+    do
+    {
+        //wait for file
+        if(YES == [[NSFileManager defaultManager] fileExistsAtPath:path])
+        {
+            //happy
+            break;
+        }
+        
+        //nap
+        [NSThread sleepForTimeInterval:waitInterval];
+        
+    //try up to specified max
+    } while(count++ < maxWait/waitInterval);
+}
+
+//given a bundle path
+// wait for plist, then load bundle
+NSBundle* getBundle(NSString* path, float maxWait)
+{
+    //bundle
+    NSBundle* bundle = nil;
+    
+    //plist path
+    NSString* plist = nil;
+    
+    //sanity check
+    if(nil == path) goto bail;
+    
+    //init path to plist in bundle
+    plist = [NSString pathWithComponents:@[path, @"/Contents/Info.plist"]];
+    
+    //wait for plist
+    // indicator that bundle 'ready'
+    waitForFile(plist, maxWait);
+    
+    //now load bundle
+    bundle = [NSBundle bundleWithPath:path];
+    
+bail:
+    
+    //load/return bundle
+    return bundle;
+}
+
+//extract value from plist
+// takes optional wait time...
+id getValueFromPlist(NSString* plistFile, NSString* plistKey, BOOL insensitiveKey, float maxWait)
+{
+    //return var
+    id plistValue;
+    
+    //contents of plist
+    NSDictionary* plistContents = nil;
+    
+    //wait for file
+    waitForFile(plistFile, maxWait);
+    
+    //load it
+    plistContents = [NSDictionary dictionaryWithContentsOfFile:plistFile];
+    if(nil == plistContents)
+    {
+        //dbg msg
+        os_log_debug(logHandle, "failed to open/read %{public}@", plistFile);
+        
+        //bail
+        goto bail;
+    }
+    
+    //try grab value
+    plistValue = plistContents[plistKey];
+    
+    //not found?
+    // try insensitve search
+    if( (nil == plistValue) &&
+        (YES == insensitiveKey))
+    {
+        //search all keys
+        for(NSString* key in plistContents)
+        {
+            //key match?
+            // extract value
+            if(YES == [key.lowercaseString isEqualToString:plistKey.lowercaseString])
+            {
+                //found!
+                plistValue = plistContents[key];
+                
+                //done
+                break;
+            }
+        }
+    }
+    
+bail:
+    
+    return plistValue;
+}
+
+//exec a process with args
+// if 'shouldWait' is set, wait and return stdout/in and termination status
+NSMutableDictionary* execTask(NSString* binaryPath, NSArray* arguments, BOOL shouldWait, BOOL grabOutput)
+{
+    //task
+    NSTask* task = nil;
+    
+    //output pipe for stdout
+    NSPipe* stdOutPipe = nil;
+    
+    //output pipe for stderr
+    NSPipe* stdErrPipe = nil;
+    
+    //read handle for stdout
+    NSFileHandle* stdOutReadHandle = nil;
+    
+    //read handle for stderr
+    NSFileHandle* stdErrReadHandle = nil;
+    
+    //results dictionary
+    NSMutableDictionary* results = nil;
+    
+    //output for stdout
+    NSMutableData *stdOutData = nil;
+    
+    //output for stderr
+    NSMutableData *stdErrData = nil;
+    
+    //dbg msg
+    os_log_debug(logHandle, "executing: %{public}@ with %{public}@", binaryPath, arguments);
+    
+    //init dictionary for results
+    results = [NSMutableDictionary dictionary];
+    
+    //init task
+    task = [[NSTask alloc] init];
+    
+    //sanity check
+    // NSTask throws if path isn't found...
+    if(YES != [NSFileManager.defaultManager fileExistsAtPath:binaryPath])
+    {
+        //bail
+        goto bail;
+    }
+    
+    //only setup pipes if wait flag is set
+    if(YES == grabOutput)
+    {
+        //init stdout pipe
+        stdOutPipe = [NSPipe pipe];
+        
+        //init stderr pipe
+        stdErrPipe = [NSPipe pipe];
+        
+        //init stdout read handle
+        stdOutReadHandle = [stdOutPipe fileHandleForReading];
+        
+        //init stderr read handle
+        stdErrReadHandle = [stdErrPipe fileHandleForReading];
+        
+        //init stdout output buffer
+        stdOutData = [NSMutableData data];
+        
+        //init stderr output buffer
+        stdErrData = [NSMutableData data];
+        
+        //set task's stdout
+        task.standardOutput = stdOutPipe;
+        
+        //set task's stderr
+        task.standardError = stdErrPipe;
+    }
+    
+    //set task's path
+    task.launchPath = binaryPath;
+    
+    //set task's args
+    if(nil != arguments)
+    {
+        //set
+        task.arguments = arguments;
+    }
+    
+    //dbg msg
+    os_log_debug(logHandle, "execing task, %{public}@ (arguments: %{public}@)", task.launchPath, task.arguments);
+    
+    //wrap task launch
     @try
     {
-        //eval
-        if( (YES != [localauthContext canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) &&
-            (error.code != -4) )
-        {
-            //bail
-            goto bail;
-        }
+        //launch
+        [task launch];
     }
-    
-    //exception likely means 'unknown policy'
-    // so we can safely ignore/bail and 'hasTouchID' won't be set
     @catch(NSException *exception)
     {
-        //bail
-        goto bail;
-    }
-    
-    //macOS only supports touchID
-    // TODO: update this if macOS ever has faceID! (see check below)
-    hasTouchID = YES;
-    
-    /*
-    //set flag
-    if(@available(macOS 10.13.2, *))
-    {
-        hasTouchID = (LABiometryTypeTouchID == localauthContext.biometryType);
-    }
-    */
-
-bail:
-    
-    return hasTouchID;
-}
-
-//get current console user
-NSString* currentConsoleUser(SCDynamicStoreRef store)
-{
-    //user
-    NSString* consoleUser = nil;
-    
-    //grab console user
-    consoleUser = CFBridgingRelease(SCDynamicStoreCopyConsoleUser(store, NULL, NULL));
-    if(nil == consoleUser)
-    {
-        //bail
-        goto bail;
-    }
-    
-    //ignore 'loginwindow'
-    if(YES == [consoleUser isEqualToString:@"loginwindow"])
-    {
-        //unset
-        consoleUser = nil;
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to launch task (%{public}@)", exception);
         
         //bail
         goto bail;
     }
     
-bail:
-        
-    return consoleUser;
-}
-
-//macOS Mojave+ gotta request camera access
-// note, we check first, to see if request was already made
-void requestCameraAccess()
-{
-    //on macOS 10.14+
-    // trigger request for camera access
-    if(@available(macOS 10.14, *))
+    //no need to wait
+    // can just bail w/ no output
+    if( (YES != shouldWait) &&
+        (YES != grabOutput) )
     {
-        //auth status
-        AVAuthorizationStatus authStatus = AVAuthorizationStatusNotDetermined;
+        //bail
+        goto bail;
+    }
+    
+    //wait
+    // ...but no output
+    else if( (YES == shouldWait) &&
+             (YES != grabOutput) )
+    {
+        //wait
+        [task waitUntilExit];
         
-        //get current status
-        authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        //add exit code
+        results[EXIT_CODE] = [NSNumber numberWithInteger:task.terminationStatus];
         
-        //already requested?
-        if(authStatus != AVAuthorizationStatusNotDetermined)
+        //bail
+        goto bail;
+    }
+    
+    //grab output?
+    // even if wait not set, still will wait!
+    else
+    {
+        //read in stdout/stderr
+        while(YES == [task isRunning])
         {
-            //bail
-            goto bail;
+            //accumulate stdout
+            [stdOutData appendData:[stdOutReadHandle readDataToEndOfFile]];
+            
+            //accumulate stderr
+            [stdErrData appendData:[stdErrReadHandle readDataToEndOfFile]];
         }
         
-        //request
-        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
+        //grab any leftover stdout
+        [stdOutData appendData:[stdOutReadHandle readDataToEndOfFile]];
+        
+        //grab any leftover stderr
+        [stdErrData appendData:[stdErrReadHandle readDataToEndOfFile]];
+        
+        //add stdout
+        if(0 != stdOutData.length)
         {
-             //dbg msg
-             logMsg(LOG_DEBUG, [NSString stringWithFormat:@"user response for camera access: %d", granted]); 
-        }];
+            //add
+            results[STDOUT] = stdOutData;
+        }
+        
+        //add stderr
+        if(0 != stdErrData.length)
+        {
+            //add
+            results[STDERR] = stdErrData;
+        }
+        
+        //add exit code
+        results[EXIT_CODE] = [NSNumber numberWithInteger:task.terminationStatus];
+    }
+
+bail:
+    
+    //dbg msg
+    os_log_debug(logHandle, "task completed with %{public}@", results);
+    
+    return results;
+}
+
+
+//loads a framework
+// note: assumes it is in 'Framework' dir
+NSBundle* loadFramework(NSString* name)
+{
+    //handle
+    NSBundle* framework = nil;
+    
+    //framework path
+    NSString* path = nil;
+    
+    //init path
+    path = [NSString stringWithFormat:@"%@/../Frameworks/%@", [NSProcessInfo.processInfo.arguments[0] stringByDeletingLastPathComponent], name];
+    
+    //standardize path
+    path = [path stringByStandardizingPath];
+    
+    //init framework (bundle)
+    framework = [NSBundle bundleWithPath:path];
+    if(NULL == framework)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //load framework
+    if(YES != [framework loadAndReturnError:nil])
+    {
+        //bail
+        goto bail;
     }
     
 bail:
+    
+    return framework;
+}
+
+//check if a file is restricted (SIP)
+BOOL isFileRestricted(NSString* file)
+{
+    //flag
+    BOOL restricted = NO;
+    
+    //info
+    struct stat info = {0};
+    
+    //clear
+    memset(&info, 0x0, sizeof(struct stat));
+    
+    //get file info
+    if(0 == lstat(file.UTF8String, &info))
+    {
+        //check flags
+        restricted = (BOOL)(info.st_flags & SF_RESTRICTED);
+    }
+    
+    return restricted;
+}
+
+//in dark mode?
+BOOL isDarkMode(void)
+{
+    return [[[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"] isEqualToString:@"Dark"];
+}
+
+//determine if path is translocated
+// thanks: http://lapcatsoftware.com/articles/detect-app-translocation.html
+BOOL isTranslocated(NSString* path)
+{
+    //token
+    static dispatch_once_t onceToken = 0;
+    
+    //framework handle
+    static void* handle = NULL;
+    
+    //fp to 'SecTranslocateIsTranslocatedURL'
+    static Boolean (*SecTranslocateIsTranslocatedURL)(CFURLRef path, bool *isTranslocated, CFErrorRef * __nullable error) = NULL;
+    
+    //flag for call
+    bool isTranslocated = false;
+    
+    //dbg msg
+    os_log_debug(logHandle, "checking if %{public}@ is translocated", path);
+
+    //load/open framework
+    dispatch_once(&onceToken, ^{
+        
+        //open and resolve 'SecTranslocateIsTranslocatedURLFP'
+        handle = dlopen("/System/Library/Frameworks/Security.framework/Security", RTLD_LAZY);
+        if(NULL != handle)
+        {
+            //resolve 'SecTranslocateIsTranslocatedURLFP'
+            SecTranslocateIsTranslocatedURL = dlsym(handle, "SecTranslocateIsTranslocatedURL");
+        }
+        //err
+        else
+        {
+            //err msg
+            os_log_error(logHandle, "ERROR: failed to 'dlopen' the 'Security.framework'");
+        }
+        
+    });
+    
+    //sanity check
+    if(NULL == SecTranslocateIsTranslocatedURL)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to resolve 'SecTranslocateIsTranslocatedURL'");
+        
+        //bail
+        goto bail;
+    }
+    
+    //call 'SecTranslocateIsTranslocatedURL'
+    if(!SecTranslocateIsTranslocatedURL((__bridge CFURLRef)([NSURL fileURLWithPath:path]), &isTranslocated, NULL))
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to invoke 'SecTranslocateIsTranslocatedURL'");
+        
+        //bail
+        goto bail;
+    }
+    
+    //log msg
+    os_log_debug(logHandle, "'SecTranslocateIsTranslocatedURL' succeeded, result: %x", isTranslocated);
+    
+bail:
+
+    return isTranslocated;
+}
+
+//convert es_string_token_t to string
+NSString* convertStringToken(const es_string_token_t* stringToken)
+{
+    //string
+    NSString* string = nil;
+    
+    //sanity check(s)
+    if( (NULL == stringToken) ||
+        (NULL == stringToken->data) ||
+        (stringToken->length <= 0) )
+    {
+        //bail
+        goto bail;
+    }
+        
+    //convert to data, then to string
+    string = [[NSString alloc] initWithBytes:stringToken->data length:stringToken->length encoding:NSUTF8StringEncoding];
+    
+bail:
+    
+    return string;
+}
+
+#ifdef DAEMON_BUILD
+
+//mach time to nanoseconds
+// from: https://developer.apple.com/documentation/apple-silicon/addressing-architectural-differences-in-your-macos-code
+uint64_t machTimeToNanoseconds(uint64_t machTime)
+{
+    uint64_t nanoseconds = 0;
+    static mach_timebase_info_data_t sTimebase;
+    if (sTimebase.denom == 0)
+        (void)mach_timebase_info(&sTimebase);
+
+    nanoseconds = ((machTime * sTimebase.numer) / sTimebase.denom);
+
+    return nanoseconds;
+}
+
+//get items quarantine flags
+// thanks: https://trac.webkit.org/changeset/281056/webkit
+uint32_t getQuarantineFlags(NSString* path)
+{
+    //error
+    int error = noErr;
+    
+    //flags
+    uint32_t flags = QTN_NOT_QUARANTINED;
+    
+    //once token
+    static dispatch_once_t onceToken = 0;
+    
+    //dylib handle
+    static void* handle = NULL;
+    
+    //function pointers
+    static qtn_file_t(*qtn_file_alloc_FP)(void) = NULL;
+    static void (*qtn_file_free_FP)(qtn_file_t qf) = NULL;
+    static uint32_t (*qtn_file_get_flags_FP)(qtn_file_t qf) = NULL;
+    static int (*qtn_file_init_with_path_FP)(qtn_file_t qf, const char *path) = NULL;
+    
+    //quarantine file
+    qtn_file_t quarantineFile = NULL;
+    
+    //dbg msg
+    os_log_debug(logHandle, "checking if %{public}@ is quarantined", path);
+    
+    //sanity check(s)
+    if(0 == path.length)
+    {
+        //err msg
+        os_log_debug(logHandle, "invalid path");
+        
+        //bail
+        goto bail;
+    }
+
+    //load/open framework
+    dispatch_once(&onceToken, ^{
+        
+        //open quarantine dylib
+        handle = dlopen("/usr/lib/system/libquarantine.dylib", RTLD_LAZY);
+        if(NULL != handle)
+        {
+            //resolve function pointers
+            qtn_file_free_FP = dlsym(handle, "_qtn_file_free");
+            qtn_file_alloc_FP = dlsym(handle, "_qtn_file_alloc");
+            qtn_file_get_flags_FP = dlsym(handle, "_qtn_file_get_flags");
+            qtn_file_init_with_path_FP = dlsym(handle, "_qtn_file_init_with_path");
+        }
+        //err
+        else
+        {
+            //err msg
+            os_log_error(logHandle, "ERROR: failed to 'dlopen' the 'libquarantine.dylib'");
+        }
+        
+    });
+    
+    //sanity check(s)
+    if( (NULL == qtn_file_free_FP) ||
+        (NULL == qtn_file_alloc_FP) ||
+        (NULL == qtn_file_get_flags_FP) ||
+        (NULL == qtn_file_init_with_path_FP) )
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to resolve 'libquarantine' function pointers");
+        
+        //bail
+        goto bail;
+    }
+    
+    //alloc file
+    quarantineFile = qtn_file_alloc_FP();
+    if(NULL == quarantineFile)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //init file
+    error = qtn_file_init_with_path_FP(quarantineFile, [NSURL fileURLWithPath:path].path.fileSystemRepresentation);
+    if(ENOENT == error)
+    {
+        //bail
+        goto bail;
+    }
+    
+    //not quarantined?
+    if(QTN_NOT_QUARANTINED == error)
+    {
+        //dbg msg
+        os_log_debug(logHandle, "%{public}@ is *not* quarantined (QTN_NOT_QUARANTINED)", path);
+        
+        //bail
+        goto bail;
+    }
+    
+    //get flags
+    flags = qtn_file_get_flags_FP(quarantineFile);
+    
+    //dbg msg
+    os_log_debug(logHandle, "quarantine flags: %#x", flags);
+
+bail:
+    
+    //cleanup
+    if(NULL != quarantineFile)
+    {
+        //free
+        qtn_file_free_FP(quarantineFile);
+        quarantineFile = NULL;
+    }
+
+    return flags;
+}
+
+//get a list of process
+NSArray* enumerateProcesses(void) {
+    size_t length = 0;
+    int32_t count = 0;
+    pid_t* pids = NULL;
+    
+    NSMutableArray* process = [NSMutableArray array];
+    
+    length = sizeof(count);
+    if(0 != sysctlbyname("kern.maxproc", &count, &length, NULL, 0)) {
+        goto bail;
+    }
+
+    pids = (pid_t *)calloc((unsigned long)count, sizeof(pid_t));
+    if(!pids) {
+        goto bail;
+    }
+    
+    count = proc_listallpids(pids, count * (int)sizeof(pid_t));
+    if(count <= 0) {
+        goto bail;
+    }
+    
+    for(int i = 0; i<count; i++)
+    {
+        NSData* auditToken = auditTokenFromPid(pids[i]);
+        if(nil != auditToken)
+        {
+            [process addObject:auditToken];
+        }
+    }
+    
+bail:
+    
+    if(pids) {
+        free(pids);
+        pids = NULL;
+    }
+    
+    return process;
+}
+
+
+//pid -> audit token
+NSData* auditTokenFromPid(pid_t pid) {
+    NSData* auditToken = nil;
+    audit_token_t token = {0};
+    task_name_t task = MACH_PORT_NULL;
+    
+    mach_msg_type_number_t info_size = TASK_AUDIT_TOKEN_COUNT;
+
+    if(KERN_SUCCESS == task_name_for_pid(mach_task_self(), pid, &task)) {
+        if(KERN_SUCCESS == task_info(task, TASK_AUDIT_TOKEN, (integer_t *)&token, &info_size)) {
+            auditToken = [NSData dataWithBytes:&token length:sizeof(audit_token_t)];
+        }
+    }
+    
+    if(MACH_PORT_NULL != task) {
+        mach_port_deallocate(mach_task_self(), task);
+    }
+    
+    return auditToken;
+}
+
+//get current working directory of process
+NSString* getCWD(pid_t pid) {
+    
+    struct proc_vnodepathinfo vinfo = {0};
+    
+    if(proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &vinfo, sizeof(vinfo)) > 0) {
+        NSString* cwd = [NSString stringWithUTF8String:vinfo.pvi_cdir.vip_path];
+        if(cwd.length) {
+            return [cwd stringByResolvingSymlinksInPath];
+        }
+    }
+    
+    return nil;
+}
+
+//extract scripts from process arguments
+NSArray* getScripts(pid_t pid, NSMutableArray* args, NSString* cwd) {
+    
+    if(args.count < 2) {
+        return nil;
+    }
+    
+    if(!cwd) {
+        cwd = getCWD(pid);
+    }
+    
+    BOOL isDirectory = NO;
+    NSMutableArray* scripts = [NSMutableArray array];
+    
+    for(NSUInteger i = 1; i < args.count; i++) {
+        
+        NSString* arg = args[i];
+        
+        //resolve relative paths against cwd
+        NSString* fullPath = nil;
+        if([arg hasPrefix:@"/"]) {
+            fullPath = arg;
+        } else if(cwd) {
+            fullPath = [cwd stringByAppendingPathComponent:arg];
+        } else {
+            continue;
+        }
+        
+        //resolve symlinks for consistent paths
+        fullPath = [fullPath stringByResolvingSymlinksInPath];
+        
+        //must be an existing regular file
+        if([NSFileManager.defaultManager fileExistsAtPath:fullPath isDirectory:&isDirectory] && !isDirectory) {
+            [scripts addObject:fullPath];
+        }
+    }
+    
+    return scripts.count > 0 ? scripts : nil;
+}
+
+#endif
+
+#ifndef DAEMON_BUILD
+
+//check/request camera access
+void requestCameraAccess(void)
+{
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+
+    //already granted
+    if(authStatus == AVAuthorizationStatusAuthorized) return;
+    
+    //never asked — show system prompt
+    if(authStatus == AVAuthorizationStatusNotDetermined) {
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            os_log_debug(logHandle, "user response for camera access: %d", granted);
+        }];
+        return;
+    }
+    
+    //denied/restricted — just alert
+    NSAlert *alert = [[NSAlert alloc] init];
+    alert.messageText     = @"Camera Access Denied";
+    alert.informativeText = @"Enable camera access in System Settings → Privacy & Security → Camera, or disable \"Include Image in Alert\".";
+    [alert addButtonWithTitle:@"Open System Settings"];
+    [alert addButtonWithTitle:@"Close"];
+
+    if([alert runModal] == NSAlertFirstButtonReturn)
+    {
+        [[NSWorkspace sharedWorkspace] openURL:
+            [NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Camera"]];
+    }
     
     return;
 }
 
-
-//check if (true) dark mode
-BOOL isDarkMode()
-{
-    //flag
-    BOOL darkMode = NO;
-    
-    //not mojave?
-    // bail, since not true dark mode
-    if(YES != [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 14, 0}])
-    {
-        //bail
-        goto bail;
-    }
-    
-    //not dark mode?
-    if(YES != [[[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"] isEqualToString:@"Dark"])
-    {
-        //bail
-        goto bail;
-    }
-    
-    //ok, mojave dark mode it is!
-    darkMode = YES;
-    
-bail:
-    
-    return darkMode;
-}
+#endif

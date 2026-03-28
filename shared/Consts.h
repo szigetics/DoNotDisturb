@@ -1,100 +1,44 @@
 //
-//  file: Const.h
-//  project: DND (shared)
+//  file: consts.h
+//  project: DoNotDisturb (shared)
 //  description: #defines and what not
 //
 //  created by Patrick Wardle
-//  copyright (c) 2018 Objective-See. All rights reserved.
+//  copyright (c) 2026 Objective-See. All rights reserved.
 //
 
-#ifndef Const_h
-#define Const_h
+#ifndef consts_h
+#define consts_h
 
-//app name
-#define APP_NAME @"Do Not Disturb.app"
+//cs consts
+// from: cs_blobs.h
+#define CS_VALID 0x00000001
+#define CS_ADHOC 0x0000002
+#define CS_RUNTIME 0x00010000
 
-//vendor id string
-#define OBJECTIVE_SEE_VENDOR "com.objectiveSee"
+//patreon url
+#define PATREON_URL @"https://www.patreon.com/join/objective_see"
 
-//installer (helper) ID
-#define INSTALLER_HELPER_ID @"com.objective-see.dnd.installer.helper"
+//bundle ID
+#define BUNDLE_ID "com.objective-see.donotdisturb"
 
 //main app bundle id
-#define MAIN_APP_ID @"com.objective-see.dnd"
+#define MAIN_APP_ID @"com.objective-see.donotdisturb"
 
-//login helper ID
-#define HELPER_ID @"com.objective-see.dnd.helper"
-
-//launch daemon name
-#define LAUNCH_DAEMON_BINARY @"Do Not Disturb"
-
-//launch daemon plist
-#define LAUNCH_DAEMON_PLIST @"com.objective-see.dnd.plist"
+//helper (login item) ID
+#define HELPER_ID @"com.objective-see.donotdisturb.helper"
 
 //installer (app) ID
-#define INSTALLER_ID @"com.objective-see.dnd.installer"
+#define INSTALLER_ID @"com.objective-see.donotdisturb.installer"
+
+//installer (helper) ID
+#define CONFIG_HELPER_ID @"com.objective-see.donotdisturb.installerHelper"
 
 //signing auth
 #define SIGNING_AUTH @"Developer ID Application: Objective-See, LLC (VBG97UB4TA)"
 
-//sentry crash reporting URL
-#define CRASH_REPORTING_URL @"https://b6e82fd3037642edbc63b1ded9be53d3:87738f112d454de5a89a9864aae73b23@sentry.io/289135"
-
-//iOS companion app URL
-#define IOS_APP_URL @"https://itunes.apple.com/us/app/do-not-disturb-companion/id1345055731?mt=8"
-
-//button title: upgrade
-#define ACTION_UPGRADE @"Upgrade"
-
-//button title: close
-#define ACTION_CLOSE @"Close"
-
-//button title: next
-#define ACTION_NEXT @"Next »"
-
-//frame shift
-// for status msg to avoid activity indicator
-#define FRAME_SHIFT 45
-
-//flag to close
-#define ACTION_CLOSE_FLAG -1
-
-//flag to uninstall
-#define ACTION_UNINSTALL_FLAG 0
-
-//flag to install
-#define ACTION_INSTALL_FLAG 1
-
-//next
-#define ACTION_NEXT_FLAG 2
-
-//flag for partial uninstall
-// leave preferences file, etc.
-#define UNINSTALL_PARTIAL 0
-
-//flag for full uninstall
-#define UNINSTALL_FULL 1
-
-//path to pkill
-#define PKILL @"/usr/bin/pkill"
-
-//path to xattr
-#define XATTR @"/usr/bin/xattr"
-
-//path to log
-#define LOG @"/usr/bin/log"
-
-//path to open
-#define OPEN @"/usr/bin/open"
-
-//apps folder
-#define APPS_FOLDER @"/Applications"
-
-//console
-#define PATH_CONSOLE "/dev/console"
-
 //install directory
-#define INSTALL_DIRECTORY @"/Library/Objective-See/DND"
+#define INSTALL_DIRECTORY @"/Library/Objective-See/DoNotDisturb"
 
 //preferences file
 #define PREFS_FILE @"preferences.plist"
@@ -109,13 +53,16 @@
 #define STATUS_CLIENT_ENABLED 1
 
 //daemon mach name
-#define DAEMON_MACH_SERVICE @"com.objective-see.dndDaemon"
+#define DAEMON_MACH_SERVICE @"com.objective-see.donotdisturb"
 
-//user (login item) mach name
-#define USER_MACH_SERVICE @"com.objective-see.dndUser"
+//product version url
+#define PRODUCT_VERSIONS_URL @"https://objective-see.org/products.json"
 
 //product url
-#define PRODUCT_URL @"https://objective-see.com/products/dnd.html"
+#define PRODUCT_URL @"https://objective-see.org/products/dnd.html"
+
+//error(s) url
+#define ERRORS_URL @"https://objective-see.org/errors.html"
 
 //support us button tag
 #define BUTTON_SUPPORT_US 100
@@ -123,118 +70,161 @@
 //more info button tag
 #define BUTTON_MORE_INFO 101
 
-//cancel button
-#define BUTTON_CANCEL 100
+//install cmd
+#define CMD_INSTALL @"-install"
 
-//config button
-#define BUTTON_CONFIG 101
+//uninstall cmd
+#define CMD_UNINSTALL @"-uninstall"
 
-//patreon url
-#define PATREON_URL @"https://www.patreon.com/bePatron?c=701171"
+//uninstall via UI
+#define CMD_UNINSTALL_VIA_UI @"-uninstallViaUI"
 
-//product version url
-#define PRODUCT_VERSIONS_URL @"https://objective-see.com/products.json"
+//flag to uninstall
+#define ACTION_UNINSTALL_FLAG 0
 
-//login item name
-#define LOGIN_ITEM_NAME @"Do Not Disturb Helper"
+//flag to install
+#define ACTION_INSTALL_FLAG 1
 
-//client ID
-#define PREF_CLIENT_ID @"clientID"
+//flag for partial uninstall
+// leave preferences file, etc.
+#define UNINSTALL_PARTIAL 0
 
-//registered device name
-#define PREF_REGISTERED_DEVICES @"registeredDevices"
+//flag for full uninstall
+#define UNINSTALL_FULL 1
+
+//add rule, block
+#define BUTTON_BLOCK 0
+
+//add rule, allow
+#define BUTTON_ALLOW 1
 
 //prefs
-// status
 #define PREF_IS_DISABLED @"disabled"
+#define PREF_GOT_FDA @"gotFullDiskAccess"
 
-//prefs
-// passive mode
-#define PREF_PASSIVE_MODE @"passiveMode"
-
-//prefs
-// icon mode
 #define PREF_NO_ICON_MODE @"noIconMode"
+#define PREF_PASSIVE_MODE @"passiveMode"
+#define PREF_TOUCH_ID_MODE @"touchIDMode"
 
-//prefs
-// touchID mode
-#define PREF_TOUCHID_MODE @"touchIDMode"
+#define PREF_CHAT_ID @"telegramChatID"
+#define PREF_BOT_TOKEN @"telegramBotID"
+#define PREF_BOT_USERNAME @"telegramBotName"
 
-//prefs
-// start mode
-#define PREF_START_MODE @"startMode"
+#define PREF_ALERT_IMAGE_MODE @"includeImage"
+#define PREF_NO_REMOTE_ALERTS_MODE @"disableRemoteAlerts"
 
-//pref
-// execute action
+#define PREF_EXECUTE_PATH @"executePath"
 #define PREF_EXECUTE_ACTION @"executeAction"
 
-//pref
-// execution path
-#define PREF_EXECUTE_PATH @"executePath"
-
-//pref
-// execution user
-#define PREF_EXECUTE_USER @"executeUser"
-
-//pref
-// monitor stuff
-#define PREF_MONITOR_ACTION @"monitorAction"
-
-//pref
-// no remote tasking
-#define PREF_NO_REMOTE_TASKING @"noRemoteTasking"
-
-//prefs
-// update mode
-#define PREF_NO_UPDATES_MODE @"noUpdatesMode"
-
-//log file
-#define LOG_FILE_NAME @"DND.log"
-
-//alert key
-// timestamp
-#define ALERT_TIMESTAMP @"timestamp"
-
-//key for device name
-#define KEY_DEVICE_NAME @"deviceName"
-
-//key for host name
-#define KEY_HOST_NAME @"hostName"
-
-/* LOGIN ITEM */
-
-//command line install
-#define CMDLINE_FLAG_INSTALL @"-install"
-
-//welcome flag
-#define CMDLINE_FLAG_WELCOME @"-welcome"
-
-//command line uninstall
-#define CMDLINE_FLAG_UNINSTALL @"-uninstall"
-
-//signature status
-#define KEY_SIGNATURE_STATUS @"signatureStatus"
-
-//signing auths
-#define KEY_SIGNING_AUTHORITIES @"signingAuthorities"
-
-//file belongs to apple?
-#define KEY_SIGNING_IS_APPLE @"signedByApple"
-
-//file signed with apple dev id
-#define KEY_SIGNING_IS_APPLE_DEV_ID @"signedWithDevID"
-
-//from app store
-#define KEY_SIGNING_IS_APP_STORE @"fromAppStore"
-
-//error URL
-#define KEY_ERROR_URL @"errorURL"
-
-//flag for error popup
-#define KEY_ERROR_SHOULD_EXIT @"shouldExit"
+#define PREF_NO_UPDATE_MODE @"noupdateMode"
 
 //general error URL
-#define FATAL_ERROR_URL @"https://objective-see.com/errors.html"
+#define FATAL_ERROR_URL @"https://objective-see.org/errors.html"
+
+//new user/client notification
+#define USER_NOTIFICATION @"com.objective-see.donotdisturb.userNotification"
+
+//first time flag
+#define INITIAL_LAUNCH @"-initialLaunch"
+
+/* INSTALLER */
+
+//menu: 'about'
+#define MENU_ITEM_ABOUT 0
+
+//menu: 'quit'
+#define MENU_ITEM_QUIT 1
+
+//menu: 'settings'
+#define MENU_ITEM_SETTINGS 2
+
+//product name
+#define PRODUCT_NAME @"DoNotDisturb"
+
+//app name
+#define APP_NAME @"DoNotDisturb Helper.app"
+
+//launch daemon
+#define LAUNCH_DAEMON @"DoNotDisturb.app"
+
+//launch daemon plist
+#define LAUNCH_DAEMON_PLIST @"com.objective-see.donotdisturb.plist"
+
+//frame shift
+// for status msg to avoid activity indicator
+#define FRAME_SHIFT 45
+
+//flag to close
+#define ACTION_CLOSE_FLAG -1
+
+//cmdline flag to uninstall
+#define ACTION_UNINSTALL @"-uninstall"
+
+//cmdline flag to uninstall
+#define ACTION_INSTALL @"-install"
+
+//button title: upgrade
+#define ACTION_UPGRADE @"Upgrade"
+
+//button title: close
+#define ACTION_CLOSE @"Close"
+
+//button title: next
+#define ACTION_NEXT @"Next »"
+
+#define ACTION_SHOW_INFO 3
+#define ACTION_SHOW_FDA 4
+#define ACTION_SHOW_CONFIGURATION 5
+#define ACTION_SHOW_SUPPORT 6
+
+//support us
+#define ACTION_SUPPORT 7
+
+//register
+#define LSREGISTER @"/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+
+/* (HELPER) APP */
+
+//path to open
+#define OPEN @"/usr/bin/open"
+
+//keys for rule dictionary
+#define RULE_PROCESS_PATH @"processPath"
+#define RULE_ACTION @"action"
+
+//keys for alert dictionary
+#define ALERT_UUID @"uuid"
+#define ALERT_MESSAGE @"message"
+#define ALERT_TIMESTAMP @"timestamp"
+#define ALERT_ENCRYPTED_FILES @"encryptedFiles"
+
+#define ALERT_AUDIT_TOKEN @"auditToken"
+#define ALERT_PROCESS_PID_VERSION @"pidVersion"
+#define ALERT_PROCESS_ID @"pid"
+#define ALERT_PROCESS_PATH @"path"
+#define ALERT_PROCESS_ARGS @"args"
+#define ALERT_PROCESS_SCRIPT @"script"
+#define ALERT_PROCESS_NAME @"name"
+#define ALERT_PROCESS_ANCESTORS @"ancestors"
+#define ALERT_PROCESS_SIGNING_INFO @"signingInfo"
+
+//signing info (from ESF)
+#define CS_FLAGS @"csFlags"
+#define PLATFORM_BINARY @"platformBinary"
+#define TEAM_ID @"teamID"
+#define SIGNING_ID @"signingID"
+
+#define ALERT_USER @"user"
+#define ALERT_ACTION @"action"
+#define ALERT_CREATE_RULE @"createRule"
+
+//keys for rules
+#define KEY_RULES @"rules"
+#define KEY_CS_FLAGS @"csFlags"
+
+
+//preferences window
+#define WINDOW_PREFERENCES 1
 
 //key for stdout output
 #define STDOUT @"stdOutput"
@@ -245,45 +235,16 @@
 //key for exit code
 #define EXIT_CODE @"exitCode"
 
-//key for error msg
-#define KEY_ERROR_MSG @"errorMsg"
+//path to launchctl
+#define LAUNCHCTL @"/bin/launchctl"
 
-//key for error sub msg
-#define KEY_ERROR_SUB_MSG @"errorSubMsg"
+//path to killall
+#define KILL_ALL @"/usr/bin/killall"
 
-//passphrase for CSR
-// no, this isn't sensitive
-#define CSR_PASSPHRASE @"csr"
-
-//0st sync view
-#define SYNC_VIEW_ZERO 0
-
-//1st sync view
-#define SYNC_VIEW_ONE 1
-
-//2nd sync view
-#define SYNC_VIEW_TWO 2
-
-//3rd sync view
-#define SYNC_VIEW_THREE 3
-
-//key for QRC dictionary
-#define KEY_PHONE_NUMBER @"phone#"
-
-//auth event notification
-#define AUTH_NOTIFICATION @"com.objective-see.dnd.authNotification"
-
-//dismiss event notification
-#define DISMISS_NOTIFICATION @"com.objective-see.dnd.dismissNotification"
-
-//new user/client notification
-#define USER_NOTIFICATION @"com.objective-see.dnd.userNotification"
-
-//monitoring timeout
-#define MONITORING_TIMEOUT 60*3
-
-//unknown user
-#define USER_UNKNOWN @"unknown"
+enum {
+    RULE_NOT_FOUND = -1,
+    RULE_BLOCK     =  0,
+    RULE_ALLOW     =  1,
+};
 
 #endif
-

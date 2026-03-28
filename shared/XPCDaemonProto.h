@@ -1,28 +1,25 @@
 //
 //  file: XPCDaemonProtocol.h
-//  project: DND (shared)
+//  project: DoNotDisturb (shared)
 //  description: methods exported by the daemon
 //
 //  created by Patrick Wardle
-//  copyright (c) 2018 Objective-See. All rights reserved.
+//  copyright (c) 2026 Objective-See. All rights reserved.
 //
 
 @import Foundation;
 
+@class Event;
+
 @protocol XPCDaemonProtocol
 
-//process qrc request from client
--(void)qrcRequest:(void (^)(NSData *))reply;
-
-//wait for phone to complete registration
-// calls into framework that comms w/ server to wait for phone
--(void)recvRegistrationACK:(void (^)(NSDictionary* registrationInfo))reply;
-
 //get preferences
--(void)getPreferences:(NSString*)preference reply:(void (^)(NSDictionary* preferences))reply;
+-(void)getPreferences:(void (^)(NSDictionary*))reply;
 
 //update preferences
 -(void)updatePreferences:(NSDictionary*)preferences;
 
-@end
+//quit (user asked!)
+-(void)quit;
 
+@end
