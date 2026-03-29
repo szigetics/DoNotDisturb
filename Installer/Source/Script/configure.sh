@@ -59,8 +59,10 @@ if [ "${1}" == "-install" ]; then
         /usr/libexec/PlistBuddy -c 'add noIconMode bool false' "$PREFERENCES"
         /usr/libexec/PlistBuddy -c 'add passiveMode bool false' "$PREFERENCES"
         /usr/libexec/PlistBuddy -c 'add touchIDMode bool true' "$PREFERENCES"
+        /usr/libexec/PlistBuddy -c 'add includeImage bool false' "$PREFERENCES"
+        /usr/libexec/PlistBuddy -c 'add executeAction bool false' "$PREFERENCES"
         /usr/libexec/PlistBuddy -c 'add gotFullDiskAccess bool false' "$PREFERENCES"
-
+    
     fi
 
     echo "install complete"

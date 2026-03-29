@@ -86,20 +86,32 @@ extern NSMutableDictionary* alerts;
 }
 
 //update (save) preferences
--(void)updatePreferences:(NSDictionary*)preferences
+-(NSDictionary*)updatePreferences:(NSDictionary*)updatedPreferences
 {
+    //preferences
+    __block NSDictionary* preferences = nil;
+    
     //dbg msg
     os_log_debug(logHandle, "invoking daemon XPC method, '%s'", __PRETTY_FUNCTION__);
     
     //update prefs
-    [[self.daemon remoteObjectProxyWithErrorHandler:^(NSError * proxyError)
+    [[self.daemon synchronousRemoteObjectProxyWithErrorHandler:^(NSError * proxyError)
     {
         //err msg
         os_log_error(logHandle, "ERROR: failed to execute daemon XPC method '%s' (error: %{public}@)", __PRETTY_FUNCTION__, proxyError);
           
-    }] updatePreferences:preferences];
+    }] updatePreferences:updatedPreferences reply:^(NSDictionary* preferencesFromDaemon)
+     {
+         //dbg msg
+         os_log_debug(logHandle, "got preferences: %{public}@", preferencesFromDaemon);
+         
+         //save
+         preferences = preferencesFromDaemon;
+         
+     }];
     
-    return;
+    return preferences;
+
 }
 
 //quit

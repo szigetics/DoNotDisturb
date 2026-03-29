@@ -72,10 +72,10 @@ extern XPCDaemonClient* xpcDaemonClient;
     
     //init telegram object
     self.telegram = [[Telegram alloc] init];
-
+    
     //set UI
     [self updateTelegramUI];
-
+    
 }
 
 //toolbar view handler
@@ -113,7 +113,7 @@ extern XPCDaemonClient* xpcDaemonClient;
     //assign view
     switch(tag)
     {
-        //modes
+            //modes
         case TOOLBAR_MODES:
             
             view = self.modesView;
@@ -123,9 +123,9 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
             
-        //alerts
+            //alerts
         case TOOLBAR_ALERTS:
-        
+            
             view = self.alertsView;
             
             //disabled?
@@ -154,7 +154,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
             
-        //actions
+            //actions
         case TOOLBAR_ACTIONS:
             
             view = self.actionsView;
@@ -170,7 +170,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
             
-        //updates
+            //updates
         case TOOLBAR_UPDATES:
             
             view = self.updateView;
@@ -227,22 +227,22 @@ extern XPCDaemonClient* xpcDaemonClient;
     updatedPreferences = [NSMutableDictionary dictionary];
     
     //get button state
-    state =  @(((NSButton*)sender).state);
+    state = @(((NSButton*)sender).state);
     
     //set appropriate preference
     switch(((NSButton*)sender).tag) {
             
-        //no icon mode
+            //no icon mode
         case BUTTON_NO_ICON_MODE:
             updatedPreferences[PREF_NO_ICON_MODE] = state;
             break;
-        
-        //touch id mode
+            
+            //touch id mode
         case BUTTON_TOUCH_ID_MODE:
             updatedPreferences[PREF_TOUCH_ID_MODE] = state;
             break;
-        
-        //include image mode
+            
+            //include image mode
         case BUTTON_ALERT_IMAGE_MODE:
             updatedPreferences[PREF_ALERT_IMAGE_MODE] = state;
             
@@ -254,7 +254,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
             
-        //disable remote alerts
+            //disable remote alerts
         case BUTTON_NO_REMOTE_ALERTS_MODE:
             updatedPreferences[PREF_NO_REMOTE_ALERTS_MODE] = state;
             
@@ -264,7 +264,10 @@ extern XPCDaemonClient* xpcDaemonClient;
                 
                 //disable
                 self.telegramBotToken.enabled = NO;
+                self.telegramBotToken.stringValue = @"";
+                
                 ((NSButton*)[self.alertsView viewWithTag:BUTTON_ALERT_IMAGE_MODE]).enabled = NO;
+                ((NSButton*)[self.alertsView viewWithTag:BUTTON_ALERT_IMAGE_MODE]).state = NSControlStateValueOff;
                 
                 os_log_debug(logHandle, "user toggled 'on' disable remote alerts, so will disable");
                 
@@ -274,15 +277,14 @@ extern XPCDaemonClient* xpcDaemonClient;
             //turned off
             // enable items
             else {
-                //enable
                 self.telegramBotToken.enabled = YES;
                 ((NSButton*)[self.alertsView viewWithTag:BUTTON_ALERT_IMAGE_MODE]).enabled = YES;
             }
-        
+            
             break;
-        
-        //execute action
-        // also toggle state of path
+            
+            //execute action
+            // also toggle state of path
         case BUTTON_EXECUTE_ACTION:
             
             //set
@@ -290,8 +292,11 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             //set path field state to match
             self.executePath.enabled = state.boolValue;
-        
-        //no update mode
+            if(state.intValue == NSControlStateValueOff) {
+                self.executePath.stringValue = @"";
+            }
+            
+            //no update mode
         case BUTTON_NO_UPDATE_MODE:
             updatedPreferences[PREF_NO_UPDATE_MODE] = state;
             break;
@@ -301,11 +306,7 @@ extern XPCDaemonClient* xpcDaemonClient;
     }
     
     //send XPC msg to daemon to update prefs
-    [xpcDaemonClient updatePreferences:updatedPreferences];
-
-    //get latest prefs
-    // note: this will include (all) prefs, which is what we want
-    self.preferences = [xpcDaemonClient getPreferences];
+    self.preferences = [xpcDaemonClient updatePreferences:updatedPreferences];
     
     //toggle (status menu) icon
     if(BUTTON_NO_ICON_MODE == ((NSButton*)sender).tag)
@@ -367,7 +368,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             self.telegramStatus.stringValue    = @"✅ Bot Token Valid — Scan QR Code to Activate";
             self.stepTwo.alphaValue            = 1.0;
             self.stepTwoDetails.alphaValue     = 1.0;
-        
+            
             [self showActivationQRCodeForBotUsername:self.preferences[PREF_BOT_USERNAME]];
             
             break;
@@ -396,10 +397,10 @@ extern XPCDaemonClient* xpcDaemonClient;
 
 //validate bot token
 - (IBAction)telegramDidEndEditing:(id)sender {
-
+    
     //extract bot token from text field
     NSString* botToken = [((NSTextField*)sender).stringValue
-                       stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+                          stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     
     //reset QR code w/ border
     self.telegramQRCode.wantsLayer = YES;
@@ -440,39 +441,35 @@ extern XPCDaemonClient* xpcDaemonClient;
                 //reset
                 self.telegramBotToken.stringValue = @"";
                 
-                [xpcDaemonClient updatePreferences:@{
+                self.preferences = [xpcDaemonClient updatePreferences:@{
                     PREF_BOT_TOKEN:  [NSNull null],
                     PREF_BOT_USERNAME:  [NSNull null],
                     PREF_CHAT_ID: [NSNull null]
                 }];
-                
-                self.preferences = [xpcDaemonClient getPreferences];
                 
                 return;
             }
             
             //update prefs
             // bot id and bot user name
-            [xpcDaemonClient updatePreferences:@{PREF_BOT_TOKEN:botToken, PREF_BOT_USERNAME:botUserName}];
-            self.preferences = [xpcDaemonClient getPreferences];
+            self.preferences = [xpcDaemonClient updatePreferences:@{PREF_BOT_TOKEN:botToken, PREF_BOT_USERNAME:botUserName}];
             
             //is there a chat id already?
             [self.telegram getChatIDWithBotID:botToken
-                                       timeout:0
+                                      timeout:0
                                    completion:^(NSString *chatID, NSError *error) {
                 
                 //have chat ID?
                 if(chatID.length) {
                     
                     //save chat ID to prefs/keychain
-                    [xpcDaemonClient updatePreferences:@{PREF_CHAT_ID: chatID}];
-                    self.preferences = [xpcDaemonClient getPreferences];
-
+                    self.preferences = [xpcDaemonClient updatePreferences:@{PREF_CHAT_ID: chatID}];
+                    
                 }
                 
                 [self.telegramActivityIndicator stopAnimation:nil];
                 self.telegramActivityIndicator.hidden = YES;
-                                
+                
                 //update UI
                 [self updateTelegramUI];
                 
@@ -485,53 +482,53 @@ extern XPCDaemonClient* xpcDaemonClient;
 
 // generate and show QR code for bot activation
 - (void)showActivationQRCodeForBotUsername:(NSString *)botUsername {
-
+    
     NSString *urlString = [NSString stringWithFormat:@"tg://resolve?domain=%@&start=connect", botUsername];
-
+    
     // generate QR via CoreImage
     CIFilter *filter = [CIFilter filterWithName:@"CIQRCodeGenerator"];
     [filter setValue:[urlString dataUsingEncoding:NSUTF8StringEncoding] forKey:@"inputMessage"];
     [filter setValue:@"M" forKey:@"inputCorrectionLevel"];
-
+    
     CIImage *ciImage = filter.outputImage;
     if(!ciImage) return;
-
+    
     // scale up to fill the image view
     CGFloat scale = self.telegramQRCode.bounds.size.width / ciImage.extent.size.width;
     CIImage *scaled = [ciImage imageByApplyingTransform:CGAffineTransformMakeScale(scale, scale)];
-
+    
     NSCIImageRep *rep = [NSCIImageRep imageRepWithCIImage:scaled];
     NSImage *image = [[NSImage alloc] initWithSize:rep.size];
     [image addRepresentation:rep];
-
+    
     // white background so QR is always scannable in dark mode
     self.telegramQRCode.wantsLayer = YES;
     self.telegramQRCode.layer.backgroundColor = NSColor.whiteColor.CGColor;
     self.telegramQRCode.layer.cornerRadius = 8.0;
-
+    
     self.telegramQRCode.image  = image;
     
     // start polling immediately — fires when user scans QR and taps Start
     self.telegramStatus.stringValue = @"Scan the QR code with your phone…";
     
-
+    
     self.telegramActivityIndicator.hidden = NO;
     [self.telegramActivityIndicator startAnimation:nil];
-
+    
     [self.telegram getChatIDWithBotID:self.preferences[PREF_BOT_TOKEN]
-                               timeout:120
-                            completion:^(NSString *chatID, NSError *error) {
-
+                              timeout:120
+                           completion:^(NSString *chatID, NSError *error) {
+        
         [self.telegramActivityIndicator stopAnimation:nil];
         self.telegramActivityIndicator.hidden = YES;
         [self.telegramStackView layoutSubtreeIfNeeded];
         
-
+        
         if(error) {
             self.telegramStatus.stringValue = [NSString stringWithFormat:@"ERROR: %@", error.localizedDescription];
             return;
         }
-
+        
         //no chat ID found ...time'd out?
         if(!chatID.length) {
             self.telegramStatus.stringValue = @"✅ Bot Token Valid — Scan to Activate";
@@ -539,10 +536,9 @@ extern XPCDaemonClient* xpcDaemonClient;
         }
         
         self.telegramStatus.stringValue = @"✅ Telegram Alerts Enabled";
-
+        
         //save chat ID
-        [xpcDaemonClient updatePreferences:@{PREF_CHAT_ID: chatID}];
-        self.preferences = [xpcDaemonClient getPreferences];
+        self.preferences = [xpcDaemonClient updatePreferences:@{PREF_CHAT_ID: chatID}];
         
         //show success alert
         NSAlert *alert = [[NSAlert alloc] init];
@@ -550,7 +546,7 @@ extern XPCDaemonClient* xpcDaemonClient;
         alert.informativeText = @"You'll receive an alert when your MacBook lid is opened.";
         [alert addButtonWithTitle:@"Send Test"];
         [alert addButtonWithTitle:@"Close"];
-
+        
         if([alert runModal] == NSAlertFirstButtonReturn) {
             [self telegramSendTest:nil];
         }
@@ -579,7 +575,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             self.telegramActivityIndicator.hidden = YES;
             [self.telegramStackView layoutSubtreeIfNeeded];
             
-    
+            
             if(error) {
                 self.telegramStatus.stringValue = [NSString stringWithFormat:@"ERROR:  %@", error.localizedDescription];
                 return;
@@ -595,7 +591,7 @@ extern XPCDaemonClient* xpcDaemonClient;
 -(void)telegramDisconnect {
     
     os_log_debug(logHandle, "disabling remote alerts...");
-
+    
     self.telegramActivityIndicator.hidden = NO;
     [self.telegramActivityIndicator startAnimation:nil];
     self.telegramStatus.stringValue = @"Disabling…";
@@ -603,14 +599,11 @@ extern XPCDaemonClient* xpcDaemonClient;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (NSEC_PER_SEC / 2)), dispatch_get_main_queue(), ^{
         
         //remove telegram bot/chat id
-        [xpcDaemonClient updatePreferences:@{
-            PREF_BOT_TOKEN:  [NSNull null],
-            PREF_BOT_USERNAME:  [NSNull null],
+        self.preferences = [xpcDaemonClient updatePreferences:@{
+            PREF_BOT_TOKEN: [NSNull null],
+            PREF_BOT_USERNAME: [NSNull null],
             PREF_CHAT_ID: [NSNull null]
         }];
-        
-        //get latest
-        self.preferences = [xpcDaemonClient getPreferences];
         
         //reset UI
         [self.telegramActivityIndicator stopAnimation:nil];
@@ -622,10 +615,11 @@ extern XPCDaemonClient* xpcDaemonClient;
         [self updateTelegramUI];
         
     });
-        
+    
 }
 
-- (IBAction)browse:(id)sender {
+//browse to select action
+-(IBAction)browse:(id)sender {
     
     //'browse' panel
     NSOpenPanel *panel = nil;
@@ -657,28 +651,34 @@ extern XPCDaemonClient* xpcDaemonClient;
     //set path
     if(NSModalResponseCancel != response) {
         self.executePath.stringValue = panel.URL.path;
+        
+        //save
+        self.preferences = [xpcDaemonClient updatePreferences:@{PREF_EXECUTE_PATH:self.executePath.stringValue}];
     }
     
     return;
 }
 
 //automatically called when 'enter' is hit
-// save values that were entered in text field
--(void)controlTextDidEndEditing:(NSNotification *)notification
+- (IBAction)actionDidEndEditing:(id)sender
 {
-    //execute path?
-    if([notification object] != self.executePath)
-    {
-        //bail
-        goto bail;
+    os_log_debug(logHandle, "actionDidEndEditing invoked...");
+    
+    NSString* path = self.executePath.stringValue;
+    NSButton* button = [self.actionsView viewWithTag:BUTTON_EXECUTE_ACTION];
+
+    //empty
+    if(!path.length) {
+        
+        //disable button
+        button.state = NSControlStateValueOff;
+        
     }
     
     //send to daemon
     // will update preferences
-    [xpcDaemonClient updatePreferences:@{PREF_EXECUTE_PATH:self.executePath.stringValue}];
+    self.preferences = [xpcDaemonClient updatePreferences:@{PREF_EXECUTE_ACTION:@(button.state), PREF_EXECUTE_PATH:path}];
     
-bail:
-
     return;
 }
 

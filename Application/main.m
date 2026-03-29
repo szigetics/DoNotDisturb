@@ -7,6 +7,8 @@
 //  copyright (c) 2026 Objective-See. All rights reserved.
 //
 
+//TODO: change XPC client checks back to 2.0.0 for final release!
+
 
 @import Cocoa;
 @import OSLog;

@@ -21,7 +21,7 @@
 -(NSDictionary*)getPreferences;
 
 //update (save) preferences
--(void)updatePreferences:(NSDictionary*)preferences;
+-(NSDictionary*)updatePreferences:(NSDictionary*)preferences;
 
 //quit
 -(void)quit;

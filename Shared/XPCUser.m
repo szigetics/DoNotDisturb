@@ -31,20 +31,11 @@ extern NSMutableDictionary* alerts;
     //notification
     NSUserNotification* notification = nil;
     
-    //formatter
-    NSDateFormatter* dateFormat = nil;
-    
     //dbg msg
     os_log_debug(logHandle, "XPC request from daemon: alert show");
     
     //alloc notification
     notification = [[NSUserNotification alloc] init];
-    
-    //alloc formatter
-    dateFormat = [[NSDateFormatter alloc] init];
-    
-    //set date format
-    [dateFormat setDateFormat:@"MM/dd/yyyy HH:mm:ss"];
     
     //set other button title
     notification.otherButtonTitle = @"Dismiss";
@@ -56,7 +47,7 @@ extern NSMutableDictionary* alerts;
     notification.title = @"⚠️ DoNotDisturb Alert";
     
     //set subtitle
-    notification.subtitle = [NSString stringWithFormat:@"Lid Opened: %@", [dateFormat stringFromDate:alert[ALERT_TIMESTAMP]]];
+    notification.subtitle = [NSString stringWithFormat:@"Lid opened at %@", alert[ALERT_TIMESTAMP]];
     
     //set delegate to self
     NSUserNotificationCenter.defaultUserNotificationCenter.delegate =self;

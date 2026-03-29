@@ -67,9 +67,6 @@ bail:
     
     __block NSInteger result = -1;
     
-    //sync wait
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    
     os_log_debug(logHandle, "invoking user XPC method: 'isScreenLocked'");
     
     //sanity check
@@ -82,17 +79,12 @@ bail:
     [[xpcListener.client synchronousRemoteObjectProxyWithErrorHandler:^(NSError *proxyError)
     {
         os_log_error(logHandle, "ERROR: failed to invoke USER XPC method: 'isScreenLocked' (error: %{public}@)", proxyError);
-        dispatch_semaphore_signal(semaphore);
 
     }] isScreenLocked:^(BOOL locked)
     {
         os_log_debug(logHandle, "USER XPC method 'isScreenLocked' returned: %lu", (unsigned long)locked);
         result = locked;
-        dispatch_semaphore_signal(semaphore);
     }];
-    
-    //wait for reply
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 
     return result;
 }
@@ -101,9 +93,6 @@ bail:
 -(NSData*)captureImage {
     
     __block NSData* result = nil;
-    
-    //sync wait
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     os_log_debug(logHandle, "invoking user XPC method: 'captureImage'");
     
@@ -117,18 +106,13 @@ bail:
     [[xpcListener.client synchronousRemoteObjectProxyWithErrorHandler:^(NSError *proxyError)
     {
         os_log_error(logHandle, "ERROR: failed to invoke USER XPC method: 'captureImage' (error: %{public}@)", proxyError);
-        dispatch_semaphore_signal(semaphore);
         
     }] captureImage:^(NSData *image)
     {
         os_log_debug(logHandle, "USER XPC method 'captureImage' returned image: %lu bytes", (unsigned long)image.length);
         
         result = image;
-        dispatch_semaphore_signal(semaphore);
     }];
-    
-    //wait for reply
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     
     return result;
 }
@@ -137,9 +121,6 @@ bail:
 -(NSInteger)executeAction:(NSString*)path {
     
     __block NSInteger result = -1;
-    
-    //sync wait
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     os_log_debug(logHandle, "invoking user XPC method: 'executeAction'");
     
@@ -153,17 +134,12 @@ bail:
     [[xpcListener.client synchronousRemoteObjectProxyWithErrorHandler:^(NSError *proxyError)
     {
         os_log_error(logHandle, "ERROR: failed to invoke USER XPC method: 'executeAction' (error: %{public}@)", proxyError);
-        dispatch_semaphore_signal(semaphore);
 
     }] executeAction:path reply:^(NSInteger response)
     {
         os_log_debug(logHandle, "USER XPC method 'executeAction' returned: %ld", (long)response);
         result = response;
-        dispatch_semaphore_signal(semaphore);
     }];
-    
-    //wait for reply
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 
     return result;
 }

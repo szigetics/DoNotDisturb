@@ -37,7 +37,7 @@ extern Preferences* preferences;
 }
 
 //update preferences
--(void)updatePreferences:(NSDictionary *)updates {
+-(void)updatePreferences:(NSDictionary *)updates reply:(void (^)(NSDictionary* preferences))reply {
     
     os_log_debug(logHandle, "XPC request: '%s' (%{public}@)", __PRETTY_FUNCTION__, updates);
     
@@ -45,6 +45,8 @@ extern Preferences* preferences;
     if(YES != [preferences update:updates]) {
         os_log_error(logHandle, "ERROR: failed to updates to preferences");
     }
+    
+    reply(preferences.preferences);
 }
 
 //quit

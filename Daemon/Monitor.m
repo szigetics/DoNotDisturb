@@ -47,40 +47,44 @@ static void pmDomainChange(void *refcon, io_service_t service, uint32_t messageT
     //sleep bit
     uint32_t sleepState = stateUnavailable;
     
-    //timestamp
-    NSDate* timestamp = nil;
-    
-    //init timestamp
-    timestamp = [NSDate date];
+    NSDate* date = [NSDate date];
+    NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
+    formatter.dateStyle = NSDateFormatterShortStyle;
+    formatter.timeStyle = NSDateFormatterShortStyle;
+    NSString* timestamp = [formatter stringFromDate:date];
     
     //ignore any messages that aren't related to lid state
-    if(kIOPMMessageClamshellStateChange != messageType) {
+    if(kIOPMMessageClamshellStateChange != messageType)
+    {
         goto bail;
     }
     
-    //dbg msg
     os_log_debug(logHandle, "got 'kIOPMMessageClamshellStateChange' message");
-    
-    //are we disabled?
-    if([preferences.preferences[PREF_IS_DISABLED] boolValue])
-    {
-        os_log_debug(logHandle, "user disabled DND, so ignoring lid event");
-        goto bail;
-    }
-    
-    // ignore if external display is active (covers clamshell + docked scenarios)
-    if( (YES == [monitor isExternalDisplayActive]) &&
-        (NO  == [monitor.xpcUserClient isScreenLocked]) )
-    {
-        os_log_info(logHandle, "external display active + screen unlocked, ignoring event");
-        goto bail;
-    }
     
     //get state
     lidState = ((uintptr_t)messageArgument & kClamshellStateBit);
     
     //get sleep state
     sleepState = !!(((uintptr_t)messageArgument & kClamshellSleepBit));
+    
+    os_log_debug(logHandle, "lid state: %{public}@ (sleep bit: %d)", (lidState) ? @"closed" : @"open", sleepState);
+    
+    //are we disabled?
+    if([preferences.preferences[PREF_IS_DISABLED] boolValue])
+    {
+        os_log_debug(logHandle, "user disabled DND, so ignoring lid event");
+        
+        lastLidState = lidState;
+        goto bail;
+    }
+    
+    //ignore if external display is active (covers clamshell + docked scenarios)
+    if( (YES == [monitor isExternalDisplayActive]) &&
+        (NO  == [monitor.xpcUserClient isScreenLocked]) )
+    {
+        os_log_info(logHandle, "external display active + screen unlocked, ignoring event");
+        goto bail;
+    }
     
     //dbg msg
     os_log_debug(logHandle, "lid state: %{public}@ (sleep bit: %d)", (lidState) ? @"closed" : @"open", sleepState);
@@ -404,7 +408,7 @@ bail:
 
 //proces lid open event
 // report to user, execute cmd, send alert to server, etc
--(void)processEvent:(NSDate*)timestamp {
+-(void)processEvent:(NSString*)timestamp {
     
     //alert
     NSDictionary* alert = @{ALERT_TIMESTAMP:timestamp};
@@ -451,7 +455,7 @@ bail:
         }
 
         //build caption
-        NSString *caption = [NSString stringWithFormat:@"⚠️ DoNotDisturb Alert: Lid opened\n%@", timestamp];
+        NSString* caption = [NSString stringWithFormat:@"⚠️ DoNotDisturb Alert: Lid opened at %@", timestamp];
 
         //send alert + optional image to Telegram
         [self.telegram sendAlertWithBotID:botToken
