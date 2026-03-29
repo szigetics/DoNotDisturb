@@ -18,9 +18,6 @@
 //log handle
 extern os_log_t logHandle;
 
-//alert windows
-NSMutableDictionary* alerts = nil;
-
 //xpc connection to daemon
 XPCDaemonClient* xpcDaemonClient;
 
@@ -59,9 +56,6 @@ XPCDaemonClient* xpcDaemonClient;
         autoLaunched = YES;
     }
 
-    //alloc array for alert (windows)
-    alerts = [NSMutableDictionary dictionary];
-    
     //init deamon comms
     // establishes connection to daemon
     xpcDaemonClient = [[XPCDaemonClient alloc] init];
@@ -88,16 +82,14 @@ XPCDaemonClient* xpcDaemonClient;
         [xpcDaemonClient updatePreferences:initialPreferences];
     }
     
-    NSDistributedNotificationCenter *center = [NSDistributedNotificationCenter defaultCenter];
-    
     //observer to screen locked
-    [center addObserver:self
+    [NSDistributedNotificationCenter.defaultCenter addObserver:self
                selector:@selector(screenLockedNotification:)
                    name:@"com.apple.screenIsLocked"
                  object:nil];
     
     //observer screen unlocked
-    [center addObserver:self
+    [NSDistributedNotificationCenter.defaultCenter addObserver:self
                selector:@selector(screenUnlockedNotification:)
                    name:@"com.apple.screenIsUnlocked"
                  object:nil];

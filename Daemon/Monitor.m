@@ -475,7 +475,7 @@ bail:
             //execute action via login item
             NSInteger result = [self.xpcUserClient executeAction:action];
             if(result != 0) {
-                os_log_error(logHandle, "ERROR: failed with execute %{public}@ (error: %ld)", action, (unsigned long)result);
+                os_log_error(logHandle, "ERROR: failed with execute %{public}@ (error: %ld)", action, (long)result);
             }
             else {
                 os_log_debug(logHandle, "executed %{public}@", action);

@@ -79,7 +79,6 @@ extern os_log_t logHandle;
     config.timeoutIntervalForRequest = timeout + 30.0;
     NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
 
-    __weak typeof(self) weak = self;
     [[session dataTaskWithURL:[NSURL URLWithString:urlStr]
       completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
 

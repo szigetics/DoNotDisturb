@@ -165,6 +165,9 @@ extern XPCDaemonClient* xpcDaemonClient;
                 self.executePath.stringValue = self.preferences[PREF_EXECUTE_PATH];
             }
             
+            //set state of 'execute action' to match
+            self.executePath.enabled = [self.preferences[PREF_EXECUTE_ACTION] boolValue];
+            
             break;
             
         //updates
@@ -277,6 +280,16 @@ extern XPCDaemonClient* xpcDaemonClient;
             }
         
             break;
+        
+        //execute action
+        // also toggle state of path
+        case BUTTON_EXECUTE_ACTION:
+            
+            //set
+            updatedPreferences[PREF_EXECUTE_ACTION] = state;
+            
+            //set path field state to match
+            self.executePath.enabled = state.boolValue;
         
         //no update mode
         case BUTTON_NO_UPDATE_MODE:

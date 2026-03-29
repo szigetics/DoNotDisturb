@@ -153,16 +153,14 @@ bail:
         }
     }
     
-    //add in (new) prefs
-    [self.preferences addEntriesFromDictionary:updates];
-    
-    //remove any keys explicitly set to NSNull
+    //process updates: handle NSNull removals first, then add real values
     for(NSString *key in updates) {
         if(updates[key] == [NSNull null]) {
+            //remove from prefs and keychain
             [self.preferences removeObjectForKey:key];
-            
-            //also remove from keychain (for telegram keys)
             deleteFromKeychain(key);
+        } else {
+            self.preferences[key] = updates[key];
         }
     }
     

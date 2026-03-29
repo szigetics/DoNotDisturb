@@ -157,7 +157,7 @@ bail:
 
     }] executeAction:path reply:^(NSInteger response)
     {
-        os_log_debug(logHandle, "USER XPC method 'executeAction' returned: %ld", (unsigned long)response);
+        os_log_debug(logHandle, "USER XPC method 'executeAction' returned: %ld", (long)response);
         result = response;
         dispatch_semaphore_signal(semaphore);
     }];
