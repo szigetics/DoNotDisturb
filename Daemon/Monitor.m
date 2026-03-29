@@ -121,8 +121,8 @@ static void pmDomainChange(void *refcon, io_service_t service, uint32_t messageT
         }
         
         //process event
-        // report to user, execute actions, etc
-        [monitor processEvent:timestamp user:getConsoleUser()];
+        // report to user, execute actions, etc.
+        [monitor processEvent:timestamp];
     }
     
     //(new) close?
@@ -384,13 +384,13 @@ bail:
 
 //proces lid open event
 // report to user, execute cmd, send alert to server, etc
--(void)processEvent:(NSDate*)timestamp user:(NSString*)user
-{
-    //alert
-    NSDictionary* alert;
+-(void)processEvent:(NSDate*)timestamp {
     
-    //init alert
-    alert = @{ALERT_TIMESTAMP:timestamp};
+    //alert
+    NSDictionary* alert = @{ALERT_TIMESTAMP:timestamp};
+    
+    //persistently log
+    os_log(logHandle, "⚠️ DoNotDisturb Alert: Lid opened");
     
     //send *local* alert to user?
     if(![preferences.preferences[PREF_PASSIVE_MODE] boolValue]) {
@@ -413,13 +413,13 @@ bail:
         NSString *botToken = preferences.preferences[PREF_BOT_TOKEN];
         NSString *chatID   = preferences.preferences[PREF_CHAT_ID];
 
-        NSData *imageData = nil;
+        NSData* image = nil;
 
         //include image?
         if([preferences.preferences[PREF_ALERT_IMAGE_MODE] boolValue]) {
             //grab image
-            imageData = [self.xpcUserClient captureImage];
-            if(!imageData.length) {
+            image = [self.xpcUserClient captureImage];
+            if(!image.length) {
                 os_log_debug(logHandle, "failed to capture image");
             }
             else {
@@ -431,17 +431,13 @@ bail:
         }
 
         //build caption
-        NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
-        fmt.dateStyle = NSDateFormatterShortStyle;
-        fmt.timeStyle = NSDateFormatterMediumStyle;
-        NSString *caption = [NSString stringWithFormat:@"⚠️ DoNotDisturb Alert: Lid opened\n%@",
-                             [fmt stringFromDate:NSDate.date]];
+        NSString *caption = [NSString stringWithFormat:@"⚠️ DoNotDisturb Alert: Lid opened\n%@", timestamp];
 
         //send alert + optional image to Telegram
         [self.telegram sendAlertWithBotID:botToken
                                     chatID:chatID
                                    caption:caption
-                                     image:imageData
+                                     image:image
                                 completion:nil];
     }
     else {

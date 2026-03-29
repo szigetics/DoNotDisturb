@@ -17,7 +17,6 @@
 #import <bsm/libbsm.h>
 #import <EndpointSecurity/EndpointSecurity.h>
 
-
 @import OSLog;
 
 @interface Monitor : NSObject
@@ -33,7 +32,6 @@
     
     //notification object
     io_object_t notification;
-
 }
 
 /* PROPERTIES */
@@ -41,13 +39,12 @@
 @property(nonatomic, retain)Telegram* telegram;
 @property(nonatomic, retain)XPCUserClient* xpcUserClient;
 
-
 /* METHODS */
 
 -(void)stop;
 -(BOOL)start;
 -(BOOL)isExternalDisplayActive;
+-(void)processEvent:(NSDate*)timestamp;
 -(BOOL)waitForTouchID:(NSTimeInterval)timeout;
--(void)processEvent:(NSDate*)timestamp user:(NSString*)user;
 
 @end

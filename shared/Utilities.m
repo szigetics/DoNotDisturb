@@ -971,15 +971,17 @@ BOOL deleteFromKeychain(NSString* key) {
     //query
     NSDictionary* query = @{
         (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrService: key
+        (__bridge id)kSecAttrService: @"com.objective-see.donotdisturb.telegram",
+        (__bridge id)kSecAttrAccount: key
     };
     
     //delete
     status = SecItemDelete((__bridge CFDictionaryRef)query);
-    if( (errSecSuccess != status) &&
-        (errSecItemNotFound != status) )
+    if(errSecSuccess != status)
     {
-        os_log_error(logHandle, "ERROR: failed to delete %{public}@ from keychain (status: %d)", key, (int)status);
+        //not found / not accessible is fine
+        // just means user hasn't configured Telegram (or item is owned by another process)
+        os_log_debug(logHandle, "deleteFromKeychain: %{public}@ (status: %d)", key, (int)status);
         return NO;
     }
     

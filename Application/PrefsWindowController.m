@@ -512,6 +512,12 @@ extern XPCDaemonClient* xpcDaemonClient;
             return;
         }
 
+        //no chat ID found ...time'd out?
+        if(!chatID.length) {
+            self.telegramStatus.stringValue = @"✅ Bot Token Valid — Scan to Activate";
+            return;
+        }
+        
         self.telegramStatus.stringValue = @"✅ Telegram Alerts Enabled";
 
         //save chat ID
