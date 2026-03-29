@@ -85,6 +85,11 @@ elif [ "${1}" == "-uninstall" ]; then
     #remove main app/helper app
     rm -rf "/Applications/DoNotDisturb Helper.app"
 
+    #delete keychain items (stored by daemon as root)
+    security delete-generic-password -s "com.objective-see.donotdisturb.telegram" -a "telegramChatID" 2> /dev/null || true
+    security delete-generic-password -s "com.objective-see.donotdisturb.telegram" -a "telegramBotID" 2> /dev/null || true
+    security delete-generic-password -s "com.objective-see.donotdisturb.telegram" -a "telegramBotName" 2> /dev/null || true
+
     #full uninstall?
     # delete DoNotDisturb's folder w/ everything
     if [[ "${2}" == "1" ]]; then

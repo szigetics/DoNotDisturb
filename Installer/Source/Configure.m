@@ -491,13 +491,6 @@ bail:
         os_log_debug(logHandle, "uninstalled login item (%{public}@)", loginItem);
     }
     
-    //delete keychain item(s)
-    deleteFromKeychain(PREF_CHAT_ID);
-    deleteFromKeychain(PREF_BOT_TOKEN);
-    deleteFromKeychain(PREF_BOT_USERNAME);
-    
-    os_log_debug(logHandle, "removed keychain items");
-    
     //unregister daemon
     if(YES != [self lsRegisterDaemon:NO])
     {

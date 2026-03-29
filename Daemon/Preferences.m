@@ -10,6 +10,7 @@
 
 #import "consts.h"
 #import "Monitor.h"
+#import "utilities.h"
 #import "Preferences.h"
 
 static NSString * const kKeychainService  = @"com.objective-see.donotdisturb.telegram";
@@ -83,22 +84,28 @@ bail:
 //save prefs to disk + keychain
 -(BOOL)save
 {
-    //save bot token
-    NSString* botToken = self.preferences[PREF_BOT_TOKEN] ?: @"";
-    if(![self saveToKeychain:botToken forKey:PREF_BOT_TOKEN]) {
-        os_log_error(logHandle, "ERROR: failed to save bot token to keychain");
+    //save bot token to keychain (if set)
+    NSString* botToken = self.preferences[PREF_BOT_TOKEN];
+    if(botToken.length) {
+        if(![self saveToKeychain:botToken forKey:PREF_BOT_TOKEN]) {
+            os_log_error(logHandle, "ERROR: failed to save bot token to keychain");
+        }
     }
     
-    //save bot user name
-    NSString* botUserName = self.preferences[PREF_BOT_USERNAME] ?: @"";
-    if(![self saveToKeychain:botUserName forKey:PREF_BOT_USERNAME]) {
-        os_log_error(logHandle, "ERROR: failed to save bot user name to keychain");
+    //save bot user name to keychain (if set)
+    NSString* botUserName = self.preferences[PREF_BOT_USERNAME];
+    if(botUserName.length) {
+        if(![self saveToKeychain:botUserName forKey:PREF_BOT_USERNAME]) {
+            os_log_error(logHandle, "ERROR: failed to save bot user name to keychain");
+        }
     }
 
-    //save chat id
-    NSString* chatID = self.preferences[PREF_CHAT_ID] ?: @"";
-    if(![self saveToKeychain:chatID forKey:PREF_CHAT_ID]) {
-        os_log_error(logHandle, "ERROR: failed to save chat ID to keychain");
+    //save chat id to keychain (if set)
+    NSString* chatID = self.preferences[PREF_CHAT_ID];
+    if(chatID.length) {
+        if(![self saveToKeychain:chatID forKey:PREF_CHAT_ID]) {
+            os_log_error(logHandle, "ERROR: failed to save chat ID to keychain");
+        }
     }
     
     //sanitize prefs (no telegram info)
@@ -153,6 +160,9 @@ bail:
     for(NSString *key in updates) {
         if(updates[key] == [NSNull null]) {
             [self.preferences removeObjectForKey:key];
+            
+            //also remove from keychain (for telegram keys)
+            deleteFromKeychain(key);
         }
     }
     
