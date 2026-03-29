@@ -771,10 +771,6 @@ bail:
 // set activation policy
 -(void)windowWillClose:(NSNotification *)notification
 {
-    //send to daemon
-    // will update preferences
-    [xpcDaemonClient updatePreferences:@{PREF_EXECUTE_PATH:self.executePath.stringValue}];
-    
     
     //wait a bit, then set activation policy
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),

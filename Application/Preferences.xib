@@ -351,7 +351,7 @@ Install Telegram, create a free bot and paste your token below. Then scan the QR
                     </textFieldCell>
                 </textField>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ghh-RJ-kn3">
-                    <rect key="frame" x="225" y="196" width="150" height="150"/>
+                    <rect key="frame" x="225" y="211" width="150" height="150"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="Eyk-od-NPq"/>
                 </imageView>

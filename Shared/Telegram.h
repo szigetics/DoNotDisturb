@@ -14,7 +14,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface Telegram : NSObject
 
 //cancel any in-flight polling
--(void)cancelPolling;
 
 - (void)validateBotID:(NSString *)botID
            completion:(void (^)(NSString * _Nullable botName,

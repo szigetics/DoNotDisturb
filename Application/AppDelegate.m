@@ -532,8 +532,10 @@ bail:
     // ->'updateResponse newVersion:' method will be called when check is done
     [update checkForUpdate:^(NSUInteger result, NSString* newVersion) {
         
-        //process response
-        [self updateResponse:result newVersion:newVersion];
+        //process response on main thread (UI work)
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self updateResponse:result newVersion:newVersion];
+        });
         
     }];
     

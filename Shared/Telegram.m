@@ -15,10 +15,6 @@ static NSString * const kTelegramAPIBase   = @"https://api.telegram.org/bot";
 extern os_log_t logHandle;
 
 @implementation Telegram
-{
-    //session for long-polling (reused across iterations)
-    NSURLSession* pollingSession;
-}
 
 //init
 -(id)init
@@ -31,13 +27,6 @@ extern os_log_t logHandle;
     }
     
     return self;
-}
-
-//cancel any in-flight polling
--(void)cancelPolling
-{
-    [pollingSession invalidateAndCancel];
-    pollingSession = nil;
 }
 
 //make sure bot ID is ok
@@ -85,15 +74,13 @@ extern os_log_t logHandle;
     NSString *urlStr = [NSString stringWithFormat:
         @"%@%@/getUpdates?timeout=%ld", kTelegramAPIBase, botID, (long)timeout];
 
-    //create polling session (once) or reuse existing
-    if(!pollingSession) {
-        NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
-        config.timeoutIntervalForRequest = timeout + 30.0;
-        pollingSession = [NSURLSession sessionWithConfiguration:config];
-    }
+    //create session with timeout matched to this request
+    NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    config.timeoutIntervalForRequest = timeout + 30.0;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
 
     __weak typeof(self) weak = self;
-    [[pollingSession dataTaskWithURL:[NSURL URLWithString:urlStr]
+    [[session dataTaskWithURL:[NSURL URLWithString:urlStr]
       completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
 
         dispatch_async(dispatch_get_main_queue(), ^{

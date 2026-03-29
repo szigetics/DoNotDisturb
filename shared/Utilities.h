@@ -99,14 +99,8 @@ NSString* topLevelApp(NSString* binaryPath);
 // b) signed with signing auth
 OSStatus verifyApp(NSString* path, NSString* signingAuth);
 
-//get name of logged in user
-NSString* getConsoleUser(void);
-
 //start app with options
 BOOL startApplication(NSURL* appPath, NSUInteger launchOptions);
-
-//check if process is alive
-BOOL isProcessAlive(pid_t processID);
 
 //set dir's|file's group/owner
 BOOL setFileOwner(NSString* path, NSNumber* groupID, NSNumber* ownerID, BOOL recursive);
@@ -146,12 +140,6 @@ BOOL toggleLoginItem(NSURL* loginItem, int toggleFlag);
 //get an icon for a process
 // for apps, this will be app's icon, otherwise just a standard system one
 NSImage* getIconForProcess(NSString* path);
-
-//find a process by name
-pid_t findProcess(NSString* processName);
-
-//hash a file (sha256)
-NSMutableString* hashFile(NSString* filePath);
 
 //exec a process with args
 // if 'shouldWait' is set, wait and return stdout/in and termination status

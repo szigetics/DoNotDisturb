@@ -32,6 +32,9 @@
     
     //notification object
     io_object_t notification;
+    
+    //monitoring active
+    BOOL running;
 }
 
 /* PROPERTIES */

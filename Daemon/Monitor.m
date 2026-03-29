@@ -179,6 +179,11 @@ bail:
     //root domain for power management
     io_service_t powerManagementRD = MACH_PORT_NULL;
     
+    //already running? stop first to avoid leaking resources
+    if(running) {
+        [self stop];
+    }
+    
     //dbg msg
     os_log_debug(logHandle, "registering for lid notifications");
     
@@ -246,6 +251,7 @@ bail:
     
     //happy
     registered = YES;
+    running = YES;
 
 bail:
 
@@ -269,39 +275,53 @@ bail:
     //dbg msg
     os_log_debug(logHandle, "unregistering lid notifications");
     
+    //not running?
+    if(!running) return;
+    
+    //mark stopped
+    running = NO;
+    
+    //have a dispatch queue?
+    // serialize teardown with in-flight callbacks
+    if(NULL != dispatchQ)
+    {
+        dispatch_queue_t q = dispatchQ;
+        dispatch_sync(q, ^{
+            [self teardownIOKit];
+        });
+        dispatchQ = NULL;
+    }
+    else
+    {
+        //no queue, just clean up directly
+        [self teardownIOKit];
+    }
+    
+    return;
+}
+
+//teardown IOKit resources
+// must be called on dispatchQ (or when dispatchQ is NULL)
+-(void)teardownIOKit
+{
     //release notification
     if(0 != notification)
     {
-        //release
         IOObjectRelease(notification);
-        
-        //unset
         notification = 0;
         
-        //dbg msg
         os_log_debug(logHandle, "released service interest notification");
     }
     
     //destroy notification port
     if(NULL != notificationPort)
     {
-        //set queue to NULL
         IONotificationPortSetDispatchQueue(notificationPort, NULL);
-        
-        //unset dispatch queue
-        dispatchQ = NULL;
-
-        //destroy port
         IONotificationPortDestroy(notificationPort);
-        
-        //unset
         notificationPort = NULL;
         
-        //dbg msg
         os_log_debug(logHandle, "destroyed notification port");
     }
-    
-    return;
 }
 
 

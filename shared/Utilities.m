@@ -397,12 +397,6 @@ bail:
     return status;
 }
 
-//get name of logged in user
-NSString* getConsoleUser(void)
-{
-    //copy/return user
-    return CFBridgingRelease(SCDynamicStoreCopyConsoleUser(NULL, NULL, NULL));
-}
 
 //get process name
 // either via app bundle, or path
@@ -881,86 +875,6 @@ NSImage* getIconForProcess(NSString* path)
 }
 
 
-//find a process by name
-pid_t findProcess(NSString* processName)
-{
-    //pid
-    pid_t processID = 0;
-    
-    //status
-    int status = -1;
-    
-    //# of procs
-    int numberOfProcesses = 0;
-    
-    //array of pids
-    pid_t* pids = NULL;
-    
-    //process path
-    NSString* processPath = nil;
-    
-    //get # of procs
-    numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
-    if(-1 == numberOfProcesses)
-    {
-        //bail
-        goto bail;
-    }
-    
-    //alloc buffer for pids
-    pids = calloc((unsigned long)numberOfProcesses, sizeof(pid_t));
-    
-    //get list of pids
-    status = proc_listpids(PROC_ALL_PIDS, 0, pids, numberOfProcesses * (int)sizeof(pid_t));
-    if(status < 0)
-    {
-        //bail
-        goto bail;
-    }
-    
-    //iterate over all pids
-    // get name for each via helper function
-    for(int i = 0; i < numberOfProcesses; ++i)
-    {
-        //skip blank pids
-        if(0 == pids[i])
-        {
-            //skip
-            continue;
-        }
-        
-        //get name
-        processPath = getProcessPath(pids[i]);
-        if( (nil == processPath) ||
-           (0 == processPath.length) )
-        {
-            //skip
-            continue;
-        }
-        
-        //match?
-        if(YES == [processPath isEqualToString:processName])
-        {
-            //save
-            processID = pids[i];
-            
-            //pau
-            break;
-        }
-        
-    }//all procs
-    
-bail:
-    
-    //free buffer
-    if(NULL != pids)
-    {
-        //free
-        free(pids);
-    }
-    
-    return processID;
-}
 
 //delete item from keychain
 BOOL deleteFromKeychain(NSString* key) {
@@ -1139,51 +1053,6 @@ bail:
 
 #pragma clang diagnostic pop
 
-//check if process is alive
-BOOL isProcessAlive(pid_t processID)
-{
-    //ret var
-    BOOL bIsAlive = NO;
-    
-    //signal status
-    int signalStatus = -1;
-    
-    //send kill with 0 to determine if alive
-    signalStatus = kill(processID, 0);
-    
-    //is alive?
-    if( (0 == signalStatus) ||
-        ((0 != signalStatus) && (errno != ESRCH)) )
-    {
-        //alive!
-        bIsAlive = YES;
-    }
-    
-    return bIsAlive;
-}
-
-
-//sha256
-// as string
-NSMutableString* hashFile(NSString* path) {
-    
-    NSData* contents = [NSData dataWithContentsOfFile:path];
-    if (!contents)
-    {
-        os_log_error(logHandle, "ERROR: failed to read in %{public}@ for hashing", path);
-        return nil;
-    }
-    
-    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
-    CC_SHA256(contents.bytes, (CC_LONG)contents.length, digest);
-    
-    NSMutableString* hash = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
-    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
-        [hash appendFormat:@"%02x", digest[i]];
-    }
-    
-    return hash;
-}
 
 #ifndef DAEMON_BUILD
 
