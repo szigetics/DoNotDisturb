@@ -16,10 +16,6 @@
 		CDAABD3E238BA077005AE212 /* Monitor.m in Sources */ = {isa = PBXBuildFile; fileRef = CDAABD3D238BA077005AE212 /* Monitor.m */; };
 		CDAABD48238BA1D3005AE212 /* libEndpointSecurity.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CDAABD47238BA1D3005AE212 /* libEndpointSecurity.tbd */; };
 		CDAABD4A238BA1E2005AE212 /* libbsm.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CDAABD49238BA1E1005AE212 /* libbsm.tbd */; };
-		CDB7408E2F21D43C00D0BA99 /* randtest.c in Sources */ = {isa = PBXBuildFile; fileRef = CDB740892F21D43C00D0BA99 /* randtest.c */; };
-		CDB7408F2F21D43C00D0BA99 /* ent.m in Sources */ = {isa = PBXBuildFile; fileRef = CDB740852F21D43C00D0BA99 /* ent.m */; };
-		CDB740912F21D43C00D0BA99 /* iso8859.c in Sources */ = {isa = PBXBuildFile; fileRef = CDB740872F21D43C00D0BA99 /* iso8859.c */; };
-		CDB740922F21D43C00D0BA99 /* chisq.c in Sources */ = {isa = PBXBuildFile; fileRef = CDB740832F21D43C00D0BA99 /* chisq.c */; };
 		CDBBC8792F777B2E00F90F8A /* Telegram.m in Sources */ = {isa = PBXBuildFile; fileRef = CDBBC8782F777B2E00F90F8A /* Telegram.m */; };
 		CDC592D6243AFE9500C190D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CDC592D5243AFE9500C190D9 /* Assets.xcassets */; };
 		CDDB44B22F37E8ED00D9892F /* signing.m in Sources */ = {isa = PBXBuildFile; fileRef = CDDB44B12F37E8ED00D9892F /* signing.m */; };
@@ -60,13 +56,6 @@
 		CDAABD3D238BA077005AE212 /* Monitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Monitor.m; sourceTree = "<group>"; };
 		CDAABD47238BA1D3005AE212 /* libEndpointSecurity.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libEndpointSecurity.tbd; path = usr/lib/libEndpointSecurity.tbd; sourceTree = SDKROOT; };
 		CDAABD49238BA1E1005AE212 /* libbsm.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbsm.tbd; path = usr/lib/libbsm.tbd; sourceTree = SDKROOT; };
-		CDB740832F21D43C00D0BA99 /* chisq.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = chisq.c; sourceTree = "<group>"; };
-		CDB740842F21D43C00D0BA99 /* ent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ent.h; sourceTree = "<group>"; };
-		CDB740852F21D43C00D0BA99 /* ent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ent.m; sourceTree = "<group>"; };
-		CDB740862F21D43C00D0BA99 /* iso8859.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iso8859.h; sourceTree = "<group>"; };
-		CDB740872F21D43C00D0BA99 /* iso8859.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = iso8859.c; sourceTree = "<group>"; };
-		CDB740882F21D43C00D0BA99 /* randtest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = randtest.h; sourceTree = "<group>"; };
-		CDB740892F21D43C00D0BA99 /* randtest.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = randtest.c; sourceTree = "<group>"; };
 		CDBBC8772F777B2E00F90F8A /* Telegram.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Telegram.h; path = ../Shared/Telegram.h; sourceTree = SOURCE_ROOT; };
 		CDBBC8782F777B2E00F90F8A /* Telegram.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Telegram.m; path = ../Shared/Telegram.m; sourceTree = SOURCE_ROOT; };
 		CDC592D5243AFE9500C190D9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -94,7 +83,6 @@
 		7D564DA01F18434F00B8AAD6 = {
 			isa = PBXGroup;
 			children = (
-				CDB7408D2F21D43C00D0BA99 /* 3rdParty */,
 				CDC592D5243AFE9500C190D9 /* Assets.xcassets */,
 				CD30BADD22174FAF00E5D96A /* DoNotDisturb.entitlements */,
 				CD21501920AD224A00CEF17B /* Frameworks */,
@@ -150,28 +138,6 @@
 				CDAABD47238BA1D3005AE212 /* libEndpointSecurity.tbd */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		CDB7408A2F21D43C00D0BA99 /* ent */ = {
-			isa = PBXGroup;
-			children = (
-				CDB740832F21D43C00D0BA99 /* chisq.c */,
-				CDB740842F21D43C00D0BA99 /* ent.h */,
-				CDB740852F21D43C00D0BA99 /* ent.m */,
-				CDB740862F21D43C00D0BA99 /* iso8859.h */,
-				CDB740872F21D43C00D0BA99 /* iso8859.c */,
-				CDB740882F21D43C00D0BA99 /* randtest.h */,
-				CDB740892F21D43C00D0BA99 /* randtest.c */,
-			);
-			path = ent;
-			sourceTree = "<group>";
-		};
-		CDB7408D2F21D43C00D0BA99 /* 3rdParty */ = {
-			isa = PBXGroup;
-			children = (
-				CDB7408A2F21D43C00D0BA99 /* ent */,
-			);
-			path = 3rdParty;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -281,10 +247,6 @@
 				CDBBC8792F777B2E00F90F8A /* Telegram.m in Sources */,
 				CD3913E92382649F00850CD1 /* XPCUserClient.m in Sources */,
 				CD3913F42382658600850CD1 /* utilities.m in Sources */,
-				CDB7408E2F21D43C00D0BA99 /* randtest.c in Sources */,
-				CDB7408F2F21D43C00D0BA99 /* ent.m in Sources */,
-				CDB740912F21D43C00D0BA99 /* iso8859.c in Sources */,
-				CDB740922F21D43C00D0BA99 /* chisq.c in Sources */,
 				CDAABD3E238BA077005AE212 /* Monitor.m in Sources */,
 				CD3913E62382649F00850CD1 /* XPCListener.m in Sources */,
 				CD3913E82382649F00850CD1 /* XPCDaemon.m in Sources */,

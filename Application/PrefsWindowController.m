@@ -341,7 +341,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             self.telegramQRCode.layer.backgroundColor = [NSColor.windowBackgroundColor CGColor];
             
             self.telegramBotToken.stringValue  = @"";
-            self.telegramStatus.stringValue    = @"❎ Telegram Alerts Disabled";
+            self.telegramStatus.stringValue    = @"📵 Telegram Alerts Disabled";
             self.stepTwo.alphaValue            = 0.3;
             self.stepTwoDetails.alphaValue     = 0.3;
             self.telegramQRCode.image          = nil;
@@ -351,7 +351,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             
         case TelegramStateActivating:
             self.telegramBotToken.stringValue  = self.preferences[PREF_BOT_TOKEN];
-            self.telegramStatus.stringValue    = @"✅ Bot Token Valid — Scan to Activate";
+            self.telegramStatus.stringValue    = @"✅ Bot Token Valid — Scan QR Code to Activate";
             self.stepTwo.alphaValue            = 1.0;
             self.stepTwoDetails.alphaValue     = 1.0;
         
@@ -388,6 +388,13 @@ extern XPCDaemonClient* xpcDaemonClient;
     NSString* botToken = [((NSTextField*)sender).stringValue
                        stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     
+    //reset QR code w/ border
+    self.telegramQRCode.wantsLayer = YES;
+    self.telegramQRCode.layer.cornerRadius = 8.0;
+    self.telegramQRCode.layer.borderWidth  = 1.5;
+    self.telegramQRCode.layer.borderColor  = [NSColor.separatorColor CGColor];
+    self.telegramQRCode.layer.backgroundColor = [NSColor.windowBackgroundColor CGColor];
+    
     //empty
     // disconnect
     if(!botToken.length) {
@@ -401,7 +408,7 @@ extern XPCDaemonClient* xpcDaemonClient;
     
     self.telegramStatus.stringValue = @"Status: Validating Bot Token...";
     
-    //1/2 secdond
+    //1/2 second
     // now validate
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (NSEC_PER_SEC / 2)), dispatch_get_main_queue(), ^{
         

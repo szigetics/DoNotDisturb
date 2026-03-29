@@ -408,8 +408,8 @@ bail:
     }
     
     //send *remote* alert via Telegram?
-    if(preferences.preferences[PREF_CHAT_ID])
-    {
+    if(preferences.preferences[PREF_CHAT_ID]){
+        
         NSString *botToken = preferences.preferences[PREF_BOT_TOKEN];
         NSString *chatID   = preferences.preferences[PREF_CHAT_ID];
 
@@ -417,7 +417,7 @@ bail:
 
         //include image?
         if([preferences.preferences[PREF_ALERT_IMAGE_MODE] boolValue]) {
-            //grab image
+            
             image = [self.xpcUserClient captureImage];
             if(!image.length) {
                 os_log_debug(logHandle, "failed to capture image");
