@@ -202,9 +202,9 @@
                     </textFieldCell>
                 </textField>
                 <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="471" translatesAutoresizingMaskIntoConstraints="NO" id="q6T-D5-7tw">
-                    <rect key="frame" x="20" y="369" width="545" height="30"/>
+                    <rect key="frame" x="20" y="369" width="562" height="30"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Scan with your phone, or open Telegram and send /start to your bot, to connect and receive alerts." id="tby-xc-Thg">
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Scan with your phone and tap 'Start' (/start) in Telegram to activate." id="tby-xc-Thg">
                         <font key="font" size="13" name="Menlo-Regular"/>
                         <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -220,7 +220,7 @@
                     </textFieldCell>
                 </textField>
                 <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OoE-EX-IOt">
-                    <rect key="frame" x="20" y="437" width="555" height="23"/>
+                    <rect key="frame" x="20" y="437" width="560" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Your Telegram Bot Token" drawsBackground="YES" id="z9S-KZ-1sF">
                         <font key="font" size="13" name="Menlo-Regular"/>

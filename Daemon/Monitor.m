@@ -390,7 +390,7 @@ bail:
     NSDictionary* alert = @{ALERT_TIMESTAMP:timestamp};
     
     //persistently log
-    os_log(logHandle, "⚠️ DoNotDisturb Alert: Lid opened");
+    os_log(logHandle, "⚠️ DoNotDisturb Alert: Lid Opened");
     
     //send *local* alert to user?
     if(![preferences.preferences[PREF_PASSIVE_MODE] boolValue]) {
