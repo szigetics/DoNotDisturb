@@ -31,12 +31,4 @@ dispatch_source_t dispatchSource = nil;
 //check for full disk access
 int fdaCheck(void);
 
-//init a handler for SIGTERM
-// can perform actions such as disabling firewall and closing logging
-void register4Shutdown(void);
-
-//daemon should only be unloaded if box is shutting down
-// so handle things de-init logging, etc
-void goodbye(void);
-
 #endif /* main_h */

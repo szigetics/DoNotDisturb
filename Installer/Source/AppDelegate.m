@@ -1,6 +1,6 @@
 //
 //  file: AppDelegate.m
-//  project: RW (config)
+//  project: DoNotDisturb (config)
 //  description: application main/delegate
 //
 //  created by Patrick Wardle

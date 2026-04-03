@@ -120,7 +120,7 @@ bail:
 }
 
 //determine if installed
-// check if various firewall components are present
+// check if various components are present (current + old v1)
 -(BOOL)isInstalled
 {
     //flag
@@ -138,10 +138,11 @@ bail:
     //init path to launch daemon plist
     launchDaemonPlist = [@"/Library/LaunchDaemons" stringByAppendingPathComponent:LAUNCH_DAEMON_PLIST];
     
-
-    //check for installed components
+    //check for installed components (current or old v1)
     installed = ( (YES == [[NSFileManager defaultManager] fileExistsAtPath:launchDaemon]) ||
-                  (YES == [[NSFileManager defaultManager] fileExistsAtPath:launchDaemonPlist]));
+                  (YES == [[NSFileManager defaultManager] fileExistsAtPath:launchDaemonPlist]) ||
+                  (YES == [[NSFileManager defaultManager] fileExistsAtPath:@"/Library/Objective-See/DND"]) ||
+                  (YES == [[NSFileManager defaultManager] fileExistsAtPath:@"/Library/LaunchDaemons/com.objective-see.dnd.plist"]));
     
     return installed;
 }

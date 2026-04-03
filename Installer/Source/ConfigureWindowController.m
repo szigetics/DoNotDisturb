@@ -283,7 +283,8 @@ extern os_log_t logHandle;
             
             break;
         }
-            
+        
+        //settings
         case ACTION_SHOW_CONFIGURATION:
         {
             NSDictionary* preferences = [NSDictionary dictionaryWithContentsOfFile:[INSTALL_DIRECTORY stringByAppendingPathComponent:PREFS_FILE]];

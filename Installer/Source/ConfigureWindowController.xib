@@ -187,7 +187,7 @@
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="660" translatesAutoresizingMaskIntoConstraints="NO" id="Lq7-rg-Vi8">
-                    <rect key="frame" x="12" y="438" width="367" height="55"/>
+                    <rect key="frame" x="17" y="438" width="367" height="55"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Support DoNotDisturb?" id="hLy-Nm-ajB">
                         <font key="font" size="40" name="AvenirNextCondensed-Regular"/>
@@ -205,7 +205,7 @@
                     </textFieldCell>
                 </textField>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rfK-hO-mO3">
-                    <rect key="frame" x="0.0" y="285" width="128" height="128"/>
+                    <rect key="frame" x="5" y="285" width="128" height="128"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="Love" id="TKX-wZ-ibu"/>
                 </imageView>
@@ -228,17 +228,17 @@
                     </textFieldCell>
                 </textField>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.90000000000000002" id="KIE-ay-ixM">
-                    <rect key="frame" x="256" y="63" width="138" height="31"/>
+                    <rect key="frame" x="257" y="63" width="138" height="31"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsMacPaw" id="JrH-9y-ikd"/>
                 </imageView>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.80000000000000004" id="fZd-vj-Qa7">
-                    <rect key="frame" x="559" y="61" width="142" height="31"/>
+                    <rect key="frame" x="563" y="61" width="142" height="31"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsHuntress" id="mVh-RF-jWB"/>
                 </imageView>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.80000000000000004" id="80Y-Cr-p4k">
-                    <rect key="frame" x="98" y="61" width="142" height="31"/>
+                    <rect key="frame" x="101" y="61" width="142" height="31"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsMalwarebytes" id="RKW-mY-3HR"/>
                 </imageView>
@@ -247,18 +247,13 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsiVerify" id="k5p-kN-wX5"/>
                 </imageView>
-                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.90000000000000002" id="yIG-eg-tmC">
-                    <rect key="frame" x="14" y="65" width="77" height="23"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsJamf" id="9Sg-kj-jIw"/>
-                </imageView>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.80000000000000004" id="zK5-TK-sRv">
-                    <rect key="frame" x="408" y="58" width="148" height="36"/>
+                    <rect key="frame" x="411" y="58" width="148" height="36"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsSophos" id="bfS-2x-6F2"/>
                 </imageView>
                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.90000000000000002" id="m9y-OI-TRj">
-                    <rect key="frame" x="410" y="104" width="155" height="35"/>
+                    <rect key="frame" x="410" y="99" width="165" height="45"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsPANW" id="od9-Z9-ulL"/>
                 </imageView>
@@ -300,6 +295,11 @@
                     </view>
                     <color key="fillColor" red="0.52700018810602922" green="0.69087679927512946" blue="0.21211786802009008" alpha="0.9959562059859155" colorSpace="custom" customColorSpace="sRGB"/>
                 </box>
+                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.90000000000000002" id="yIG-eg-tmC">
+                    <rect key="frame" x="20" y="65" width="77" height="23"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="FriendsJamf" id="9Sg-kj-jIw"/>
+                </imageView>
             </subviews>
             <point key="canvasLocation" x="549" y="1416"/>
         </customView>
@@ -316,7 +316,7 @@
                     </buttonCell>
                 </button>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N78-cR-2xx">
-                    <rect key="frame" x="212" y="287" width="35" height="27"/>
+                    <rect key="frame" x="182" y="287" width="35" height="27"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <textFieldCell key="cell" alignment="left" title="1️⃣" id="5ht-Fc-wiw">
                         <font key="font" size="15" name="AppleColorEmoji"/>
@@ -324,24 +324,15 @@
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="660" translatesAutoresizingMaskIntoConstraints="NO" id="79m-dV-AlU">
-                    <rect key="frame" x="18" y="426" width="664" height="54"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="First,  grant DoNotDisturb &quot;Full Disk Access&quot;" id="2Xx-zn-2yk">
-                        <font key="font" size="32" name="AvenirNextCondensed-Regular"/>
-                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                </textField>
                 <box fixedFrame="YES" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="1E6-QY-aSM">
-                    <rect key="frame" x="214" y="168" width="566" height="52"/>
+                    <rect key="frame" x="184" y="168" width="596" height="52"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <view key="contentView" id="Rsv-Ep-DIs">
-                        <rect key="frame" x="0.0" y="0.0" width="566" height="52"/>
+                        <rect key="frame" x="0.0" y="0.0" width="596" height="52"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="471" translatesAutoresizingMaskIntoConstraints="NO" id="EWY-JR-4KU">
-                                <rect key="frame" x="6" y="-4" width="574" height="60"/>
+                                <rect key="frame" x="6" y="-4" width="549" height="60"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="  If DoNotDisturb.app doesn't show up, click the '+'   and add: /Library/Objective-See/DoNotDisturb/DoNotDisturb.app.app" id="8y9-Rd-AFr">
                                     <font key="font" size="13" name="Menlo-Regular"/>
@@ -358,16 +349,16 @@
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="AppIcon" id="1z3-Yc-E0C"/>
                 </imageView>
                 <box fixedFrame="YES" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="3Dd-76-j1y">
-                    <rect key="frame" x="20" y="375" width="760" height="48"/>
+                    <rect key="frame" x="20" y="384" width="760" height="48"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <view key="contentView" id="WW8-d6-gKK">
                         <rect key="frame" x="0.0" y="0.0" width="760" height="48"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="471" translatesAutoresizingMaskIntoConstraints="NO" id="B5b-qp-5ZG">
-                                <rect key="frame" x="7" y="16" width="746" height="15"/>
+                                <rect key="frame" x="-2" y="16" width="764" height="15"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="DoNotDistrub requires 'Full Disk Access'. This must be granted via 'System Settings'" id="Yli-S5-63Q">
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="DoNotDisturb requires &quot;Full Disk Access&quot;. This must be granted via 'System Settings'" id="Yli-S5-63Q">
                                     <font key="font" size="13" name="Menlo-Regular"/>
                                     <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -377,14 +368,14 @@
                     </view>
                 </box>
                 <box fixedFrame="YES" boxType="custom" borderType="none" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="25C-YE-AnT">
-                    <rect key="frame" x="0.0" y="0.0" width="802" height="48"/>
+                    <rect key="frame" x="0.0" y="0.0" width="800" height="48"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <view key="contentView" id="plu-j6-fPy">
-                        <rect key="frame" x="0.0" y="0.0" width="802" height="48"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="48"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button tag="5" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="lA7-7J-J8l">
-                                <rect key="frame" x="676" y="14" width="106" height="20"/>
+                                <rect key="frame" x="674" y="14" width="106" height="20"/>
                                 <buttonCell key="cell" type="push" title="Next »" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2zh-cX-bxe">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" size="13" name="Menlo-Bold"/>
@@ -406,7 +397,7 @@
                     <color key="fillColor" red="0.52700018810000004" green="0.69087679930000001" blue="0.21211786799999999" alpha="0.99595620600000001" colorSpace="custom" customColorSpace="sRGB"/>
                 </box>
                 <button tag="1" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vW7-Uf-kbG">
-                    <rect key="frame" x="248" y="284" width="201" height="32"/>
+                    <rect key="frame" x="218" y="284" width="201" height="32"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="push" title="Open 'System Settings'" bezelStyle="rounded" alignment="center" controlSize="large" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="eRs-Pz-RPD">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -417,7 +408,7 @@
                     </connections>
                 </button>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Wjf-cd-het">
-                    <rect key="frame" x="212" y="236" width="35" height="27"/>
+                    <rect key="frame" x="182" y="236" width="35" height="27"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <textFieldCell key="cell" alignment="left" title="2️⃣" id="iaT-NG-LDu">
                         <font key="font" size="15" name="AppleColorEmoji"/>
@@ -426,16 +417,16 @@
                     </textFieldCell>
                 </textField>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VLE-fu-elO">
-                    <rect key="frame" x="244" y="236" width="560" height="20"/>
+                    <rect key="frame" x="214" y="236" width="560" height="20"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <textFieldCell key="cell" alignment="left" title="Toggle on DoNotDisturb.app in the 'Full Disk Access' table." id="N2v-ch-yYk">
+                    <textFieldCell key="cell" alignment="left" title="Toggle on DoNotDisturb.app in the &quot;Full Disk Access&quot; table." id="N2v-ch-yYk">
                         <font key="font" size="15" name="Menlo-Regular"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vSl-D2-AGZ">
-                    <rect key="frame" x="252" y="91" width="284" height="18"/>
+                    <rect key="frame" x="222" y="91" width="284" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" title="Waiting for Full Disk Access..." id="elr-Eq-734">
                         <font key="font" size="15" name="Menlo-Regular"/>
@@ -444,9 +435,18 @@
                     </textFieldCell>
                 </textField>
                 <progressIndicator wantsLayer="YES" fixedFrame="YES" maxValue="100" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="32N-uK-pG9">
-                    <rect key="frame" x="208" y="84" width="32" height="32"/>
+                    <rect key="frame" x="178" y="84" width="32" height="32"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                 </progressIndicator>
+                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="660" translatesAutoresizingMaskIntoConstraints="NO" id="Ltg-ro-Pzp">
+                    <rect key="frame" x="17" y="438" width="679" height="55"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Grant DoNotDisturb &quot;Full Disk Access&quot;" id="5Gs-As-ox3">
+                        <font key="font" size="40" name="AvenirNextCondensed-Regular"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
             <point key="canvasLocation" x="549" y="844"/>
         </customView>
@@ -454,15 +454,6 @@
             <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="660" translatesAutoresizingMaskIntoConstraints="NO" id="4QW-fs-s0N">
-                    <rect key="frame" x="18" y="426" width="664" height="54"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Now, let's configure DoNotDisturb:" id="iXV-MX-vGo">
-                        <font key="font" size="32" name="AvenirNextCondensed-Regular"/>
-                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                </textField>
                 <box fixedFrame="YES" boxType="custom" borderType="none" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="9DR-9C-J6F">
                     <rect key="frame" x="0.0" y="0.0" width="800" height="48"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -575,6 +566,15 @@ Configure remote alerts via Telegram in the Settings pane.</string>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="AppIcon" id="GZV-9i-A0l"/>
                 </imageView>
+                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="660" translatesAutoresizingMaskIntoConstraints="NO" id="D3D-wc-aeO">
+                    <rect key="frame" x="17" y="438" width="732" height="55"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Configure DoNotDisturb" id="uwM-9C-dXM">
+                        <font key="font" size="40" name="AvenirNextCondensed-Regular"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
             <point key="canvasLocation" x="1882" y="844"/>
         </customView>

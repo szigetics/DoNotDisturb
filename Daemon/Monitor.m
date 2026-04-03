@@ -28,8 +28,6 @@ extern os_log_t logHandle;
 //glboal prefs obj
 extern Preferences* preferences;
 
-//endpoint security client
-es_client_t* esClient = nil;
 
 //last state
 // sometimes multiple notifications are delivered!?
@@ -110,14 +108,14 @@ static void pmDomainChange(void *refcon, io_service_t service, uint32_t messageT
         os_log_info(logHandle, "[NEW EVENT] lid state: open (sleep state: %d)", sleepState);
         
         //touch id mode?
-        // wait up to 5 seconds, and ignore event if user auth'd via biometrics
+        // wait up to 7 seconds, and ignore event if user auth'd via biometrics
         if(YES == [preferences.preferences[PREF_TOUCH_ID_MODE] boolValue])
         {
             //dbg msg
             os_log_debug(logHandle, "'touch ID' mode enabled, waiting for biometric auth event");
             
             //wait for touch ID
-            if(YES == [monitor waitForTouchID:5.0])
+            if(YES == [monitor waitForTouchID:7.0])
             {
                 os_log_info(logHandle, "user authenticated via touch ID, ignoring event");
                 goto bail;
@@ -252,6 +250,8 @@ bail:
         goto bail;
     }
     
+    //start touch ID monitoring
+    [self startTouchIDMonitor];
     
     //happy
     registered = YES;
@@ -284,6 +284,9 @@ bail:
     
     //mark stopped
     running = NO;
+    
+    //stop touch id monitoring
+    [self stopTouchIDMonitor];
     
     //have a dispatch queue?
     // serialize teardown with in-flight callbacks
@@ -355,55 +358,90 @@ bail:
     return NO;
 }
 
-//wait for a touch ID auth event
--(BOOL)waitForTouchID:(NSTimeInterval)timeout
+//start persistent ES client for touch ID auth monitoring
+-(void)startTouchIDMonitor
 {
-    __block BOOL touchIDSeen     = NO;
-    dispatch_semaphore_t sem     = dispatch_semaphore_create(0);
-    es_client_t *client          = NULL;
-
+    //already running?
+    if(esAuthClient) return;
+    
     //init ES client
-    if(ES_NEW_CLIENT_RESULT_SUCCESS != es_new_client(&client, ^(es_client_t *c,
-                                                                 const es_message_t *msg) {
+    es_new_client_result_t result = es_new_client(&esAuthClient, ^(es_client_t *c,
+                                                                    const es_message_t *msg) {
         //only care about auth events
         if(msg->event_type != ES_EVENT_TYPE_NOTIFY_AUTHENTICATION) return;
-
+        
         //only care about Touch ID successes
         if(msg->event.authentication->type    != ES_AUTHENTICATION_TYPE_TOUCHID) return;
         if(msg->event.authentication->success != YES) return;
-
-        //got one — signal and bail
-        touchIDSeen = YES;
-        dispatch_semaphore_signal(sem);
-
-    })) {
-        //failed
-        os_log_error(logHandle, "waitForTouchID: es_new_client failed");
-        return NO;
+        
+        //record timestamp
+        self.lastTouchIDAuth = [NSDate date];
+        
+        os_log_debug(logHandle, "touch ID auth detected");
+    });
+    
+    if(ES_NEW_CLIENT_RESULT_SUCCESS != result) {
+        os_log_error(logHandle, "ERROR: failed to create ES client for touch ID monitoring (result: %d)", result);
+        esAuthClient = NULL;
+        return;
     }
-
+    
     //subscribe
     es_event_type_t events[] = { ES_EVENT_TYPE_NOTIFY_AUTHENTICATION };
-    if(ES_RETURN_SUCCESS != es_subscribe(client, events, 1))
-    {
-        //failed
-        os_log_error(logHandle, "waitForTouchID: es_subscribe failed");
-        
-        //cleanup
-        es_delete_client(client);
+    if(ES_RETURN_SUCCESS != es_subscribe(esAuthClient, events, 1)) {
+        os_log_error(logHandle, "ERROR: failed to subscribe to ES auth events");
+        es_delete_client(esAuthClient);
+        esAuthClient = NULL;
+        return;
+    }
+    
+    os_log_debug(logHandle, "persistent touch ID monitor started");
+}
+
+//stop persistent ES client
+-(void)stopTouchIDMonitor
+{
+    if(esAuthClient) {
+        es_unsubscribe_all(esAuthClient);
+        es_delete_client(esAuthClient);
+        esAuthClient = NULL;
+        os_log_debug(logHandle, "persistent touch ID monitor stopped");
+    }
+}
+
+//wait for a touch ID auth event
+// polls the persistent ES client's timestamp
+-(BOOL)waitForTouchID:(NSTimeInterval)timeout
+{
+    //no ES client?
+    if(!esAuthClient) {
+        os_log_error(logHandle, "waitForTouchID: no ES client (FDA not granted?)");
         return NO;
     }
-
-    //wait — returns early if semaphore is signalled
-    dispatch_time_t deadline = dispatch_time(DISPATCH_TIME_NOW,
-                                             (int64_t)(timeout * NSEC_PER_SEC));
-    dispatch_semaphore_wait(sem, deadline);
-
-    //always clean up
-    es_unsubscribe_all(client);
-    es_delete_client(client);
-
-    return touchIDSeen;
+    
+    //reference time (lid just opened)
+    NSDate* lidOpenTime = [NSDate date];
+    
+    //poll for touch ID auth
+    NSTimeInterval elapsed = 0;
+    while(elapsed < timeout)
+    {
+        //check if a touch ID auth occurred after lid open
+        NSDate* authTime = self.lastTouchIDAuth;
+        if(authTime && [authTime timeIntervalSinceDate:lidOpenTime] >= 0)
+        {
+            os_log_debug(logHandle, "touch ID auth detected (%.1fs relative to lid open)",
+                         [authTime timeIntervalSinceDate:lidOpenTime]);
+            return YES;
+        }
+        
+        //sleep briefly
+        [NSThread sleepForTimeInterval:0.25];
+        elapsed += 0.25;
+    }
+    
+    os_log_debug(logHandle, "waitForTouchID: timed out after %.1fs", timeout);
+    return NO;
 }
 
 //proces lid open event

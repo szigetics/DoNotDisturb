@@ -76,23 +76,8 @@ NSString* getMainAppPath(void);
 // ->extracted from Info.plist
 NSString* getAppVersion(void);
 
-//wait for file to be written to disk
-void waitForFile(NSString* path, float maxWait);
-
 //get (true) parent
 NSDictionary* getRealParent(pid_t pid);
-
-//given a bundle path
-// wait for plist, then load bundle
-NSBundle* getBundle(NSString* path, float maxWait);
-
-//extract value from plist
-// takes optional wait time...
-id getValueFromPlist(NSString* plistFile, NSString* key, BOOL insensitive, float maxWait);
-
-//find 'top-level' app of binary
-// useful to determine if binary (or other app) is embedded in a 'parent' app bundle
-NSString* topLevelApp(NSString* binaryPath);
 
 //verify that an app bundle is
 // a) signed

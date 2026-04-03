@@ -116,7 +116,7 @@
 #define PREF_EXECUTE_PATH @"executePath"
 #define PREF_EXECUTE_ACTION @"executeAction"
 
-#define PREF_NO_UPDATE_MODE @"noupdateMode"
+#define PREF_NO_UPDATE_MODE @"noUpdatesMode"
 
 //general error URL
 #define FATAL_ERROR_URL @"https://objective-see.org/errors.html"

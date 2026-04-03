@@ -35,6 +35,9 @@
     
     //monitoring active
     BOOL running;
+    
+    //persistent ES client for touch ID monitoring
+    es_client_t* esAuthClient;
 }
 
 /* PROPERTIES */
@@ -42,12 +45,15 @@
 @property(nonatomic, retain)Telegram* telegram;
 @property(nonatomic, retain)XPCUserClient* xpcUserClient;
 
+//last touch ID auth timestamp (set by persistent ES client)
+@property(atomic, retain)NSDate* lastTouchIDAuth;
+
 /* METHODS */
 
 -(void)stop;
 -(BOOL)start;
 -(BOOL)isExternalDisplayActive;
--(void)processEvent:(NSDate*)timestamp;
+-(void)processEvent:(NSString*)timestamp;
 -(BOOL)waitForTouchID:(NSTimeInterval)timeout;
 
 @end

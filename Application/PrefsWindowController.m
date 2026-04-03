@@ -232,17 +232,17 @@ extern XPCDaemonClient* xpcDaemonClient;
     //set appropriate preference
     switch(((NSButton*)sender).tag) {
             
-            //no icon mode
+        //no icon mode
         case BUTTON_NO_ICON_MODE:
             updatedPreferences[PREF_NO_ICON_MODE] = state;
             break;
             
-            //touch id mode
+        //touch id mode
         case BUTTON_TOUCH_ID_MODE:
             updatedPreferences[PREF_TOUCH_ID_MODE] = state;
             break;
             
-            //include image mode
+        //include image mode
         case BUTTON_ALERT_IMAGE_MODE:
             updatedPreferences[PREF_ALERT_IMAGE_MODE] = state;
             
@@ -254,7 +254,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
             
-            //disable remote alerts
+        //disable remote alerts
         case BUTTON_NO_REMOTE_ALERTS_MODE:
             updatedPreferences[PREF_NO_REMOTE_ALERTS_MODE] = state;
             
@@ -283,8 +283,8 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
             
-            //execute action
-            // also toggle state of path
+        //execute action
+        // also toggle state of path
         case BUTTON_EXECUTE_ACTION:
             
             //set
@@ -295,6 +295,8 @@ extern XPCDaemonClient* xpcDaemonClient;
             if(state.intValue == NSControlStateValueOff) {
                 self.executePath.stringValue = @"";
             }
+            
+            break;
             
             //no update mode
         case BUTTON_NO_UPDATE_MODE:
@@ -633,14 +635,14 @@ extern XPCDaemonClient* xpcDaemonClient;
     //allow files
     panel.canChooseFiles = YES;
     
-    //allow directories (app bundles)
-    panel.canChooseDirectories = YES;
+    //no directories
+    panel.canChooseDirectories = NO;
     
     //can open app bundles
     panel.treatsFilePackagesAsDirectories = YES;
     
-    //start in /Apps
-    panel.directoryURL = [NSURL fileURLWithPath:@"/Applications"];
+    //start in desktop
+    panel.directoryURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDesktopDirectory inDomains:NSUserDomainMask] firstObject];
     
     //disable multiple selections
     panel.allowsMultipleSelection = NO;
@@ -774,17 +776,14 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             break;
     }
-    
-    
+        
     return;
 }
-
 
 //on window close
 // set activation policy
 -(void)windowWillClose:(NSNotification *)notification
 {
-    
     //wait a bit, then set activation policy
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
     ^{

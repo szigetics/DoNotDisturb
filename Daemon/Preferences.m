@@ -70,6 +70,11 @@ bail:
         self.preferences[PREF_BOT_TOKEN] = botToken;
     }
     
+    NSString* botName  = [self readFromKeychain:PREF_BOT_USERNAME];
+    if(botName.length) {
+        self.preferences[PREF_BOT_USERNAME] = botName;
+    }
+    
     NSString *chatID = [self readFromKeychain:PREF_CHAT_ID];
     if(chatID.length) {
         self.preferences[PREF_CHAT_ID] = chatID;
