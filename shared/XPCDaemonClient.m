@@ -42,6 +42,12 @@ extern NSMutableDictionary* alerts;
         //set remote object interface
         self.daemon.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(XPCDaemonProtocol)];
         
+        //whitelist acceptable classses
+        [self.daemon.remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [NSDictionary class], [NSString class], [NSNumber class], [NSDate class], [NSData class], [NSNull class], nil]
+                                          forSelector:@selector(updatePreferences:reply:)
+                                        argumentIndex:0
+                                              ofReply:NO];
+        
         //set exported object interface (protocol)
         self.daemon.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(XPCUserProtocol)];
         

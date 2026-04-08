@@ -233,6 +233,12 @@ bail:
     //set the interface that the exported object implements
     newConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(XPCDaemonProtocol)];
     
+    //whitelist acceptable classses
+    [newConnection.exportedInterface setClasses:[NSSet setWithObjects:[NSArray class], [NSDictionary class], [NSString class], [NSNumber class], [NSDate class], [NSData class], [NSNull class], nil]
+                                    forSelector:@selector(updatePreferences:reply:)
+                                  argumentIndex:0
+                                        ofReply:NO];
+    
     //set object exported by connection
     newConnection.exportedObject = [[XPCDaemon alloc] init];
     

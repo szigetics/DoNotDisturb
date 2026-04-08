@@ -146,13 +146,16 @@ dispatch_source_t dispatchSource = nil;
 bail:
     
     //always try to remove validated app
-    if(YES != [[NSFileManager defaultManager] removeItemAtPath:validatedApp error:nil])
+    if(nil != validatedApp)
     {
-        //err msg
-        os_log_error(logHandle, "ERROR: failed to remove validated app %{public}@", validatedApp);
-        
-        //set err
-        result = -1;
+        if(YES != [[NSFileManager defaultManager] removeItemAtPath:validatedApp error:nil])
+        {
+            //err msg
+            os_log_error(logHandle, "ERROR: failed to remove validated app %{public}@", validatedApp);
+            
+            //set err
+            result = -1;
+        }
     }
     
     return result;
