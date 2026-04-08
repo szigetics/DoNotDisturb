@@ -31,6 +31,6 @@
 -(NSData*)captureImage;
 
 //ask (login item) to execute action
--(NSInteger)executeAction:(NSString*)path;
+-(NSInteger)executeAction:(NSString*)action;
 
 @end

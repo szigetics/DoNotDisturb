@@ -241,6 +241,9 @@ extern os_log_t logHandle;
             //remove title
             self.window.title = @"";
             
+            //disable 'next' button
+            ((NSButton*)[self.diskAccessView viewWithTag:ACTION_SHOW_CONFIGURATION]).enabled = NO;
+            
             //show view
             [self showView:self.diskAccessView firstResponder:self.diskAccessButton];
             

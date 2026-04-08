@@ -16,7 +16,7 @@
 -(void)alertShow:(NSDictionary*)alert;
 -(void)captureImage:(void (^)(NSData*))reply;
 -(void)isScreenLocked:(void (^)(BOOL))reply;
--(void)executeAction:(NSString*)path reply:(void (^)(NSInteger))reply;
+-(void)executeAction:(NSString*)action reply:(void (^)(NSInteger))reply;
 
 @end
 

@@ -96,28 +96,17 @@ extern NSMutableDictionary* alerts;
 }
 
 //exec (user specified) action
--(void)executeAction:(NSString*)path reply:(void (^)(NSInteger))reply
+// run via /bin/sh -c so commands, scripts, and binaries all work
+-(void)executeAction:(NSString*)action reply:(void (^)(NSInteger))reply
 {
     int result = -1;
     
-    os_log_debug(logHandle, "executing %{public}@", path);
+    os_log_debug(logHandle, "executing %{public}@", action);
     
-    //ensure executable
-    NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
-    if(attrs) {
-        NSNumber *perms = attrs[NSFilePosixPermissions];
-        if(perms) {
-            mode_t mode = (mode_t)perms.unsignedShortValue;
-            if(0 == (mode & S_IXUSR)) {
-                chmod(path.fileSystemRepresentation, mode | S_IXUSR);
-            }
-        }
-    }
+    //exec via shell
+    NSDictionary *results = execTask(@"/bin/sh", @[@"-c", action], YES, NO);
     
-    //exec via shell so scripts and binaries both work
-    NSDictionary *results = execTask(path, nil, YES, NO);
-    
-    os_log_debug(logHandle, "executed %{public}@, results: %{public}@", path, results);
+    os_log_debug(logHandle, "executed %{public}@, results: %{public}@", action, results);
     
     if(nil != results[EXIT_CODE]) {
         result = [results[EXIT_CODE] intValue];

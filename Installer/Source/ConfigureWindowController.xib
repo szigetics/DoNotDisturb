@@ -307,14 +307,6 @@
             <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
-                <button tag="4" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kFj-wQ-KUc">
-                    <rect key="frame" x="944" y="115" width="100" height="32"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="push" title="Next »" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" tag="3" imageScaling="proportionallyDown" inset="2" id="0Lz-WH-OSI">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" size="13" name="Menlo-Bold"/>
-                    </buttonCell>
-                </button>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N78-cR-2xx">
                     <rect key="frame" x="182" y="287" width="35" height="27"/>
                     <autoresizingMask key="autoresizingMask"/>

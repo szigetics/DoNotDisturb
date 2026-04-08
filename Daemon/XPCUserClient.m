@@ -118,7 +118,7 @@ bail:
 }
 
 //ask (login item) to execute action
--(NSInteger)executeAction:(NSString*)path {
+-(NSInteger)executeAction:(NSString*)action {
     
     __block NSInteger result = -1;
     
@@ -135,7 +135,7 @@ bail:
     {
         os_log_error(logHandle, "ERROR: failed to invoke USER XPC method: 'executeAction' (error: %{public}@)", proxyError);
 
-    }] executeAction:path reply:^(NSInteger response)
+    }] executeAction:action reply:^(NSInteger response)
     {
         os_log_debug(logHandle, "USER XPC method 'executeAction' returned: %ld", (long)response);
         result = response;
