@@ -160,8 +160,7 @@ extern XPCDaemonClient* xpcDaemonClient;
             view = self.actionsView;
             
             ((NSButton*)[view viewWithTag:BUTTON_EXECUTE_ACTION]).state = [self.preferences[PREF_EXECUTE_ACTION] boolValue];
-            if(self.preferences[PREF_EXECUTE_PATH])
-            {
+            if(self.preferences[PREF_EXECUTE_PATH]) {
                 self.executePath.stringValue = self.preferences[PREF_EXECUTE_PATH];
             }
             
@@ -781,9 +780,14 @@ extern XPCDaemonClient* xpcDaemonClient;
 }
 
 //on window close
-// set activation policy
+// clean up and set activation policy
 -(void)windowWillClose:(NSNotification *)notification
 {
+    //execute action checked but no command/path?
+    if([self.preferences[PREF_EXECUTE_ACTION] boolValue] && !self.executePath.stringValue.length) {
+        self.preferences = [xpcDaemonClient updatePreferences:@{PREF_EXECUTE_ACTION:@NO, PREF_EXECUTE_PATH:@""}];
+    }
+    
     //wait a bit, then set activation policy
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
     ^{
