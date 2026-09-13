@@ -82,6 +82,15 @@ if [ "${1}" == "-install" ]; then
     
     fi
 
+    #remove quarantine attribute from installed items
+    # as installer process may be quarantined, (re)quarantining all files it creates
+    # ...and macOS 27+ launchd won't load a launch daemon whose plist is quarantined
+    xattr -rd com.apple.quarantine \
+        "$INSTALL_DIRECTORY" \
+        "/Library/LaunchDaemons/com.objective-see.donotdisturb.plist" \
+        "/Applications/DoNotDisturb Helper.app" 2>/dev/null
+    echo "removed quarantine attribute(s)"
+
     echo "install complete"
     exit 0
 

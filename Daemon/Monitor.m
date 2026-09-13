@@ -442,11 +442,11 @@ bail:
     //reference time (lid just opened)
     NSDate* lidOpenTime = [NSDate date];
     
-    //poll for touch ID auth
+    //poll for trusted auth auth
     NSTimeInterval elapsed = 0;
     while(elapsed < timeout)
     {
-        //check if a touch ID auth occurred after lid open
+        //check if a trusted auth occurred after lid open
         NSDate* authTime = self.lastTrustedAuth;
         if(authTime && [authTime timeIntervalSinceDate:lidOpenTime] >= 0)
         {
